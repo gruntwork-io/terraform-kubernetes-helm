@@ -28,11 +28,6 @@ clean up.
 - Install the latest version of [Go](https://golang.org/).
 - Install [dep](https://github.com/golang/dep) for Go dependency management.
 - Install [Terraform](https://www.terraform.io/downloads.html).
-- Install [pyenv](https://github.com/pyenv/pyenv).
-- Install the following versions of python with pyenv:
-    - 2.7.12
-    - 3.5.2
-
 - Configure your AWS credentials using one of the [options supported by the AWS 
   SDK](http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html). Usually, the easiest option is to
   set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
@@ -47,14 +42,6 @@ cd test
 dep ensure
 ```
 
-Download python dependencies using pip:
-
-```
-cd test/script_tests
-pip install -r requirements.txt
-```
-
-
 ### Run all the tests
 
 #### Terratest
@@ -63,14 +50,6 @@ pip install -r requirements.txt
 cd test
 go test -v -timeout 60m
 ```
-
-#### Python scripts
-
-```bash
-cd test/script_tests
-tox
-```
-
 
 ### Run a specific test
 
@@ -82,19 +61,3 @@ To run a specific test called `TestFoo`:
 cd test
 go test -v -timeout 60m -run TestFoo
 ```
-
-#### Python scripts
-
-TODO
-
-
-## Known instabilities in test
-
-- `TestEKSCluster` will sometimes fail with:
-
-  ```
-  kubernetes_config_map.eks_to_k8s_role_mapping: Post https://5D6DB4CE12C35AD89507342004154717.yl4.us-east-1.eks.amazonaws.com/api/v1/namespaces/kube-system/configmaps: dial tcp 23.23.30.22:443: i/o timeout
-  ```
-
-  This is a known issue where the EKS API does not come up immediately and there is a delay between the creation
-  completing, and the API actually being available. This is inconsistent, so try again to work around this.
