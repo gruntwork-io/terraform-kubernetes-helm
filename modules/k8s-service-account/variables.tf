@@ -1,0 +1,62 @@
+# ---------------------------------------------------------------------------------------------------------------------
+# MODULE PARAMETERS
+# These variables are expected to be passed in by the operator when calling this terraform module.
+# ---------------------------------------------------------------------------------------------------------------------
+
+variable "name" {
+  description = "The name of the service account to be created."
+}
+
+variable "namespace" {
+  description = "The namespace where the service account is created."
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# OPTIONAL MODULE PARAMETERS
+# These variables have defaults, but may be overridden by the operator.
+# ---------------------------------------------------------------------------------------------------------------------
+
+variable "rbac_roles" {
+  description = "List of names of the RBAC roles that should be bound to the service account. If this list is non-empty, you must also pass in num_rbac_roles specifying the number of roles."
+  type        = "list"
+  default     = []
+}
+
+variable "labels" {
+  description = "Map of string key default pairs that can be used to organize and categorize the service account. See the Kubernetes Reference for more info (https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)."
+  type        = "map"
+  default     = {}
+}
+
+variable "annotations" {
+  description = "Map of string key default pairs that can be used to store arbitrary metadata on the service account. See the Kubernetes Reference for more info (https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)."
+  type        = "map"
+  default     = {}
+}
+
+variable "automount_service_account_token" {
+  description = "Whether or not to automatically mount the service account token into the container. This defaults to true."
+  default     = true
+}
+
+variable "secrets_for_pulling_images" {
+  description = "A list of references to secrets in the same namespace to use for pulling any images in pods that reference this Service Account."
+  type        = "list"
+  default     = []
+}
+
+variable "secrets_for_pods" {
+  description = "A list of secrets allowed to be used by pods running using this Service Account."
+  type        = "list"
+  default     = []
+}
+
+variable "kubectl_config_context_name" {
+  description = "The config context to use when authenticating to the Kubernetes cluster. If empty, defaults to the current context specified in the kubeconfig file."
+  default     = ""
+}
+
+variable "kubectl_config_path" {
+  description = "The path to the config file to use for kubectl. If empty, defaults to $HOME/.kube/config"
+  default     = ""
+}
