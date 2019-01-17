@@ -20,7 +20,7 @@ provider "kubernetes" {
 module "namespace" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
-  # source = "git::git@github.com:gruntwork-io/package-k8s.git//modules/k8s-namespace?ref=v0.1.0"
+  # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.0.1"
   source = "../../modules/k8s-namespace"
 
   kubectl_config_context_name = "${var.kubectl_config_context_name}"
@@ -35,7 +35,7 @@ module "namespace" {
 module "service_account_access_all" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
-  # source = "git::git@github.com:gruntwork-io/package-k8s.git//modules/k8s-service-account?ref=v0.1.0"
+  # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-service-account?ref=v0.0.1"
   source = "../../modules/k8s-service-account"
 
   kubectl_config_context_name = "${var.kubectl_config_context_name}"
@@ -53,7 +53,7 @@ module "service_account_access_all" {
 module "service_account_access_read_only" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
-  # source = "git::git@github.com:gruntwork-io/package-k8s.git//modules/k8s-service-account?ref=v0.1.0"
+  # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-service-account?ref=v0.0.1"
   source = "../../modules/k8s-service-account"
 
   kubectl_config_context_name = "${var.kubectl_config_context_name}"
