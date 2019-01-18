@@ -29,36 +29,32 @@ resource "kubernetes_namespace" "namespace" {
 # This defines two default RBAC roles scoped to the namespace:
 # - namespace-access-all : Admin level permissions on all resources in the namespace.
 # - namespace-access-read-only: Read only permissions on all resources in the namespace.
-# NOTE: replace below with resources from the Terraform Kubernetes provider when they become available.
-# - Open PR: https://github.com/terraform-providers/terraform-provider-kubernetes/pull/235
 # ---------------------------------------------------------------------------------------------------------------------
 
-locals {
-  kubectl_config_options = "${var.kubectl_config_context_name != "" ? "--context ${var.kubectl_config_context_name}" : ""} ${var.kubectl_config_path != "" ? "--kubeconfig ${var.kubectl_config_path}" : ""}"
+resource "kubernetes_role" "rbac_role_access_all" {
+  metadata {
+    name        = "${var.name}-access-all"
+    namespace   = "${var.name}"
+    labels      = "${var.labels}"
+    annotations = "${var.annotations}"
+  }
+
+  rule {
+    api_groups = ["*"]
+    resources  = ["*"]
+    verbs      = ["*"]
+  }
 }
 
-resource "null_resource" "rbac_role_access_all" {
-  provisioner "local-exec" {
-    command = "echo '${data.template_file.rbac_role_access_all.rendered}' | kubectl auth reconcile ${local.kubectl_config_options} -f -"
+resource "kubernetes_role" "rbac_role_access_read_only" {
+  metadata {
+    name      = "${var.name}-access-read-only"
+    namespace = "${var.name}"
   }
 
-  provisioner "local-exec" {
-    command = "echo '${data.template_file.rbac_role_access_all.rendered}' | kubectl delete ${local.kubectl_config_options} -f -"
-    when    = "destroy"
+  rule {
+    api_groups = ["*"]
+    resources  = ["*"]
+    verbs      = ["get", "list", "watch"]
   }
-
-  depends_on = ["kubernetes_namespace.namespace"]
-}
-
-resource "null_resource" "rbac_role_access_read_only" {
-  provisioner "local-exec" {
-    command = "echo '${data.template_file.rbac_role_access_read_only.rendered}' | kubectl auth reconcile ${local.kubectl_config_options} -f -"
-  }
-
-  provisioner "local-exec" {
-    command = "echo '${data.template_file.rbac_role_access_read_only.rendered}' | kubectl delete ${local.kubectl_config_options} -f -"
-    when    = "destroy"
-  }
-
-  depends_on = ["kubernetes_namespace.namespace"]
 }
