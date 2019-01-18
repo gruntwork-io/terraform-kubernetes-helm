@@ -57,23 +57,7 @@ func TestK8SNamespaceWithServiceAccount(t *testing.T) {
 
 	defer test_structure.RunTestStage(t, "cleanup", func() {
 		k8sNamespaceTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
-
-		// We extract out the outputs before destroying so that we can validate these resources are destroyed. This is
-		// to test that the null_resource provisioners ran on destroy to destroy those resources.
-		rbacAccessAllRole := terraform.Output(t, k8sNamespaceTerratestOptions, "rbac_access_all_role")
-		rbacAccessAllRoleDeleteString := fmt.Sprintf("role.rbac.authorization.k8s.io \"%s\" deleted", rbacAccessAllRole)
-		rbacAccessReadOnlyRole := terraform.Output(t, k8sNamespaceTerratestOptions, "rbac_access_read_only_role")
-		rbacAccessReadOnlyRoleDeleteString := fmt.Sprintf("role.rbac.authorization.k8s.io \"%s\" deleted", rbacAccessReadOnlyRole)
-		accessAllServiceAccount := terraform.Output(t, k8sNamespaceTerratestOptions, "service_account_access_all")
-		accessAllServiceAccountDeleteString := fmt.Sprintf("rolebinding.rbac.authorization.k8s.io \"%s-role-binding\" deleted", accessAllServiceAccount)
-		accessROServiceAccount := terraform.Output(t, k8sNamespaceTerratestOptions, "service_account_access_read_only")
-		accessROServiceAccountDeleteString := fmt.Sprintf("rolebinding.rbac.authorization.k8s.io \"%s-role-binding\" deleted", accessROServiceAccount)
-
-		out := terraform.Destroy(t, k8sNamespaceTerratestOptions)
-		assert.True(t, strings.Contains(out, rbacAccessAllRoleDeleteString))
-		assert.True(t, strings.Contains(out, rbacAccessReadOnlyRoleDeleteString))
-		assert.True(t, strings.Contains(out, accessAllServiceAccountDeleteString))
-		assert.True(t, strings.Contains(out, accessROServiceAccountDeleteString))
+		terraform.Destroy(t, k8sNamespaceTerratestOptions)
 	})
 
 	test_structure.RunTestStage(t, "terraform_apply", func() {
