@@ -16,6 +16,12 @@ variable "namespace" {
 # These variables have defaults, but may be overridden by the operator.
 # ---------------------------------------------------------------------------------------------------------------------
 
+# Workaround terraform limitation where resource count can not include interpolated lists.
+variable "num_rbac_roles" {
+  description = "Number of RBAC roles to bind. This should match the number of items in the list passed to rbac_roles."
+  default     = 0
+}
+
 variable "rbac_roles" {
   description = "List of names of the RBAC roles that should be bound to the service account. If this list is non-empty, you must also pass in num_rbac_roles specifying the number of roles."
   type        = "list"
@@ -49,14 +55,4 @@ variable "secrets_for_pods" {
   description = "A list of secrets allowed to be used by pods running using this Service Account."
   type        = "list"
   default     = []
-}
-
-variable "kubectl_config_context_name" {
-  description = "The config context to use when authenticating to the Kubernetes cluster. If empty, defaults to the current context specified in the kubeconfig file."
-  default     = ""
-}
-
-variable "kubectl_config_path" {
-  description = "The path to the config file to use for kubectl. If empty, defaults to $HOME/.kube/config"
-  default     = ""
 }

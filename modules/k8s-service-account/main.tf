@@ -31,21 +31,27 @@ resource "kubernetes_service_account" "service_account" {
 
 # ---------------------------------------------------------------------------------------------------------------------
 # BIND THE PROVIDED ROLES TO THE SERVICE ACCOUNT
-# NOTE: replace below with resources from the Terraform Kubernetes provider when they become available.
-# - Open PR: https://github.com/terraform-providers/terraform-provider-kubernetes/pull/235
 # ---------------------------------------------------------------------------------------------------------------------
 
-locals {
-  kubectl_config_options = "${var.kubectl_config_context_name != "" ? "--context ${var.kubectl_config_context_name}" : ""} ${var.kubectl_config_path != "" ? "--kubeconfig ${var.kubectl_config_path}" : ""}"
-}
+resource "kubernetes_role_binding" "service_account_role_binding" {
+  count = "${var.num_rbac_roles}"
 
-resource "null_resource" "rbac_role_binding" {
-  provisioner "local-exec" {
-    command = "echo '${data.template_file.rbac_role_binding_list.rendered}' | kubectl auth reconcile ${local.kubectl_config_options} -f -"
+  metadata {
+    name        = "${var.name}-${element(var.rbac_roles, count.index)}-role-binding"
+    namespace   = "${var.namespace}"
+    labels      = "${var.labels}"
+    annotations = "${var.annotations}"
   }
 
-  provisioner "local-exec" {
-    command = "echo '${data.template_file.rbac_role_binding_list.rendered}' | kubectl delete ${local.kubectl_config_options} -f -"
-    when    = "destroy"
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = "${element(var.rbac_roles, count.index)}"
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = "${kubernetes_service_account.service_account.metadata.0.name}"
+    namespace = "${var.namespace}"
   }
 }
