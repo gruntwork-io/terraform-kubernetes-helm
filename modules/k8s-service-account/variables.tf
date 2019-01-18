@@ -17,6 +17,7 @@ variable "namespace" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Workaround terraform limitation where resource count can not include interpolated lists.
+# See: https://github.com/hashicorp/terraform/issues/17421
 variable "num_rbac_roles" {
   description = "Number of RBAC roles to bind. This should match the number of items in the list passed to rbac_roles."
   default     = 0
