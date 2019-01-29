@@ -1,6 +1,6 @@
-# K8S Helm Server Module
+# K8S Tiller (Helm Server) Module
 
-This Terraform Module manages Helm Servers (also known as Tiller) deployments on your targetted Kubernetes clusters.
+This Terraform Module manages Tiller (the server component of Helm) deployments on your targetted Kubernetes clusters.
 This module can be used to declaratively deploy and manage multiple Tiller deployments in a single Kubernetes cluster.
 Unlike the defaults installed by the helm client, the deployed Tiller instances:
 
@@ -8,19 +8,70 @@ Unlike the defaults installed by the helm client, the deployed Tiller instances:
 - Are restricted to the provided namespace.
 - Enable TLS, allocating a set of base credentials for the operator to use (more can be added later).
 
+Note: Please be advised that there are plans by the community to deprecate and remove Tiller starting Helm v3. This
+repository will be updated with migration instructions to help smooth out the upgrade when Helm v3 lands.
+
 
 ## How do you use this module?
 
 * See the [root README](/README.md) for instructions on using Terraform modules.
-* This module uses [the `kubernetes` provider](https://www.terraform.io/docs/providers/kubernetes/index.html).
 * See the [examples](/examples) folder for example usage.
 * See [variables.tf](./variables.tf) for all the variables you can set on this module.
 * See [outputs.tf](./outputs.tf) for all the variables that are outputed by this module.
-* This module depends on [`kubergrunt`](https://github.com/gruntwork-io/kubergrunt). Refer to the `kubergrunt`
-  documentation for installation instructions.
+* `kubectl` must be configured to authenticate against the target Kubernetes cluster.
+* This module uses the `kubergrunt` utiltity under the hood to deploy Tiller. See [the
+  documentation](https://github.com/gruntwork-io/kubergrunt) for more information.
 
 
-## Security Model of Helm Server (Tiller)
+## Why does this depend on an external tool?
+
+This module depends on an external tool ([`kubergrunt`](https://github.com/gruntwork-io/kubergrunt)) to drive the
+deployment of Tiller. We took this approach to solve the following requirements:
+
+- A way to generate TLS certificates for server and client auth.
+- A way to manage client certificates (granting and revoking access).
+- Avoid leaking sensitive information (e.g certificates) into the terraform state.
+- Be portable across platforms (Linux, Mac OSX, Windows).
+
+None of the existing solutions quite satisfied all our constraints. Additionally, many of the standard resources in the
+existing terraform providers leaked sensitive information into the terraform state. We reached the conclusion that
+Terraform may not be best suited for the purpose of TLS certificate management, and instead we should rely on a script.
+
+We considered a few scripting options, but ultimately landed on implementing the tool in Go. This is primarily for Go's strengths
+around cross compilation and portability, as well as its dependency management. Here are the alternatives we considered:
+
+- `bash` + `openssl`: While great for Unix scripting, does not support typical Windows environments.
+- `python`: While great on platform portability, version (python 2 vs 3) and dependency portability (installing
+  dependencies requires a 3rd party tool and additional installation step) are weaker compared to Go.
+
+
+## Differences with the helm provider based Tiller install
+
+There are a few enhancements in this module compared to setting up a Tiller install using [the `helm`
+provider](https://www.terraform.io/docs/providers/helm/index.html#install_tiller). Eventually this will reduce down to
+the TLS certificate management once [Tiller is turned into a
+resource](https://github.com/terraform-providers/terraform-provider-helm/issues/134):
+
+### Automatic TLS generation
+
+By leveraging `kubergrunt`, this module is able to generate and manage TLS certificates as part of the install process
+without leaking it into the terraform state (e.g see [warning on the TLS
+provider](https://www.terraform.io/docs/providers/tls/r/private_key.html)). Additionally, this will deploy Tiller in a
+way to be compatible with the [`grant`](https://github.com/gruntwork-io/kubergrunt/blob/master/README.md#grant) and
+[`configure`](https://github.com/gruntwork-io/kubergrunt/blob/master/README.md#helm-configure) commands of `kubergrunt`
+for setting up client access.
+
+### Destroy
+
+This Terraform module implements a resource that can declaratively define a Tiller install. Although this can not
+implement a true `plan` of the underlying Kubernetes resources, this module can destroy a Tiller install if it is not
+added.
+
+The `helm` provider installs Tiller as part of the provider configuration and setup. This means that it will not
+automatically be tracked in state, and thus will not be destroyed when the code is removed.
+
+
+## Security Model of Tiller (the server component of Helm)
 
 By design, Tiller is the responsible entity in Helm to apply the Kubernetes config against the cluster. What this means
 is that Tiller needs enough permissions in the Kubernetes cluster to be able to do anything requested by a Helm chart.
@@ -37,6 +88,8 @@ Tiller provides two mechanisms to handle the permissions given their design:
 
 - Using `ServiceAccounts` to restrict what Tiller can do
 - Using TLS based authentication to restrict who has access to the Tiller server
+
+You can read more about the security model of Tiller in [their official docs](https://docs.helm.sh/using_helm/#securing-your-helm-installation).
 
 This module provides utilities that help support this security model.
 
@@ -70,12 +123,6 @@ To summarize, assuming a single client, in this model we have three sets of TLS 
 - Key pair to identify Tiller.
 - Key pair to identify the client.
 
-This module will generate the Tiller and CA TLS certificates for each Tiller install and store the certificates in a
-Secret on the Kubernetes cluster. The Secrets are then shared with RBAC groups so that authorized users can access the
-certificates to manage client access. By default this is limited to those in those who have cluster admin access
-(superusers). Additional RBAC roles can be granted access by using the `ca_certificate_rbac_roles` and the
-`tiller_certificate_rbac_roles` input variables to the module.
-
 ### Service Account
 
 Tiller relies on `ServiceAccounts` and the associated RBAC roles to properly restrict what Helm Charts can do. The RBAC
@@ -87,9 +134,9 @@ This module requires a `ServiceAccount` to use for Tiller, specified by the `ser
 roles for the `ServiceAccount` is managed outside of this module. See the [secure-helm example](/examples/secure-helm)
 for example usage.
 
-At a minimum, each Tiller server should be deployed in its own namespace to manage the resources in that namespace, and
-restricted to only be able to access that namespace. This can be done by creating a `ServiceAccount` limited to that
-namespace:
+At a minimum, each Tiller server should be deployed in its own namespace separate from the namespace to manage
+resources, and restricted to only be able to access those namespaces. This can be done by creating a `ServiceAccount`
+limited to that namespace, with permissions granted to access the resource namespace:
 
 ```yaml
 ---
@@ -97,8 +144,32 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: dev-service-account
+  namespace: dev-tiller
   labels:
     app: tiller
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+metadata:
+  namespace: dev-tiller
+  name: dev-tiller-all
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+metadata:
+  name: dev-role-dev-tiller-all-members
+  namespace: dev-tiller
+subjects:
+  - kind: Group
+    name: system:serviceaccounts:dev-service-account
+roleRef:
+  kind: Role
+  name: dev-tiller-all
+  apiGroup: "rbac.authorization.k8s.io"
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1alpha1
@@ -124,8 +195,35 @@ roleRef:
   apiGroup: "rbac.authorization.k8s.io"
 ```
 
-This resource configuration creates a new `ServiceAccount` named `dev-service-account`, a new RBAC `Role` named
-`dev-all` with permissions to do anything in the `dev` namespace, and `RoleBinding` that ties the two together.
+This resource configuration creates a new `ServiceAccount` named `dev-service-account`. This resource then creates two
+RBAC roles: one to grant admin permissions to the `dev` namespace (`dev-all`) and one to grant admin permissions to the
+`dev-tiller` namespace (`dev-tiller-all`). Finally, the configuration specifies `RoleBinding` resources to bind the new
+roles to the `ServiceAccount`.
+
+### Namespaces: Tiller Namespace vs Resource Namespace
+
+We recommend provisioning Tiller in its own namespace, separate from the namespace where the resources will ultimately
+be deployed. The primary reason for doing this is so that you can lock down access to Tiller. Typically it is
+challenging to implement RBAC controls to prevent access to specific resources within a `Namespace`, and still be
+functional. For example, it is challenging to come up with rules to allow listing pods in a namespace while denying
+access to a specific pod. This is because the `list` action in RBAC automatically pulls in the details included in a
+`get` action, yet you can only limit access to specific resources on a `get` action in RBAC.
+
+In practice, you will want to grant your users enough permissions in the resource namespace so that your users can
+access the resources being deployed to perform their daily actions. This might include listing pods, setting up port
+forwards to services, or even listing secrets in the namespace. If you share the namespace between where Tiller is
+deployed and where the resources will be deployed, it is easy to accidentally set enough permissions to your users to be
+able to access Tiller's resources. This includes the `ServiceAccount` credentials and the server side TLS certificates
+that the Tiller pod uses.
+
+This is why we recommend specifying a different namespace to deploy Tiller from where the resources are deployed.
+
+Note: The exception to this is when you want to use `helm` to manage admin level resources (e.g deploying [the Kubernetes
+Cluster Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler)). In this case, the Tiller
+deployment will manage resources in the `kube-system` namespace, which is the admin level namespace of the cluster. For
+this namespace, you will want your Tiller instance to also be in the `kube-system` namespace so that it shares all the
+locked down access properties of that namespace.
+
 
 ## Threat model
 
@@ -176,13 +274,16 @@ permissions. Each of the key pairs have varying degrees of severity when comprom
 
 ## How do I grant access to the deployed Tiller instance?
 
-As mentioned in the [Client Authentication section](#client-authentication), a TLS certificate key pair needs to be
-issued using the installed CA to grant access to helm clients to access the Tiller server. This means that, at a
-minimum, you need to be a privileged user with access to the CA key pair. By default this is restricted to cluster admin
-users.
+As mentioned in the [Client Authentication section](#client-authentication), in order to grant access to a client, you
+need to generate a new TLS certificate key pair that is signed by the CA installed on the Tiller server. This requires
+access to the private key of the CA.
 
-As a cluster admin user, you can then use the CA key pair to issue a new key pair that is then shared with the helm
-client. At a high level, the process is:
+This module manages the TLS certificates through `kubergrunt`. As part of deploying Tiller, `kubergrunt` creates a
+`Secret` in the `kube-system` namespace containing the private key and certificate of the CA used for deploying Tiller.
+This can then be used by a cluster admin user to issue new key pairs that can be verified by the CA certificate
+installed in the Tiller pod. This key pair can then be shared with the helm client to grant access.
+
+At a high level, the process is:
 
 - Download the CA key pair from Kubernetes.
 - Issue a new TLS certificate key pair using the CA key pair.
@@ -191,18 +292,35 @@ client. At a high level, the process is:
 - Remove the local copies of the downloaded and generated certificates.
 - The client then downloads the new TLS certificate key pair and configures the local helm client.
 
-We provide a [subcommand in `kubergrunt`](../kubergrunt/README.md#grant) to automate this process, so that everything up
-to and including uploading the TLS certificates back to Kubernetes can be done in one command:
+We provide a [subcommand in `kubergrunt`](https://github.com/gruntwork-io/kubergrunt/blob/master/README.md#helm-grant)
+to automate this process, so that everything up to and including uploading the TLS certificates back to Kubernetes can
+be done in one command:
 
 ```
-kubergrunt helm grant --tiller-namespace NAMESPACE_OF_TILLER_TO_GRANT_ACCESS_TO --rbac-role ROLE_THAT_SHOULD_HAVE_ACCESS
+kubergrunt helm grant --tiller-namespace NAMESPACE_OF_TILLER_TO_GRANT_ACCESS_TO --rbac-user USER_THAT_SHOULD_HAVE_ACCESS
 ```
 
-This command will create a new namespace that hyphen concatenates the tiller namespace with the granted rbac role that
-will house a `Secret` resource named `tiller-client-keypair` that the client can then download and use.
+This command will generate a new certificate key pair signed by the CA and upload it into a new `Secret` resource in the
+namespace where Tiller is deployed. Then, this will grant the minimal set of permissions needed by the target RBAC user
+to be able to download the certificate and access the Tiller pod endpoint.
+
+We also provide a [subcommand in
+`kubergrunt`](https://github.com/gruntwork-io/kubergrunt/blob/master/README.md#helm-configure) to automate the download
+process for the helm client:
+
+```
+kubergrunt helm configure \
+    --home-dir $HOME/.helm \
+    --tiller-namespace NAMESPACE_OF_TILLER_TO_GRANT_ACCESS_TO \
+    --rbac-user RBAC_USER_OF_AUTHENTICATION
+```
+
+<!--
+-- This is not implemented yet
 
 We also provide a subcommand to revoke access as well:
 
 ```
 kubergrunt helm revoke --tiller-namespace NAMESPACE_OF_TILLER_TO_GRANT_ACCESS_TO --rbac-role ROLE_THAT_SHOULD_HAVE_ACCESS
 ```
+-->
