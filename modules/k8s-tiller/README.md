@@ -23,6 +23,28 @@ repository will be updated with migration instructions to help smooth out the up
   documentation](https://github.com/gruntwork-io/kubergrunt) for more information.
 
 
+## Why does this depend on an external tool?
+
+This module depends on an external tool ([`kubergrunt`](https://github.com/gruntwork-io/kubergrunt)) to drive the
+deployment of Tiller. We took this approach to solve the following requirements:
+
+- A way to generate TLS certificates for server and client auth.
+- A way to manage client certificates (granting and revoking access).
+- Avoid leaking sensitive information (e.g certificates) into the terraform state.
+- Be portable across platforms (Linux, Mac OSX, Windows).
+
+None of the existing solutions quite satisfied all our constraints. Additionally, many of the standard resources in the
+existing terraform providers leaked sensitive information into the terraform state. We reached the conclusion that
+Terraform may not be best suited for the purpose of TLS certificate management, and instead we should rely on a script.
+
+We considered a few scripting options, but ultimately landed on implementing the tool in Go. This is primarily for Go's strengths
+around cross compilation and portability, as well as its dependency management. Here are the alternatives we considered:
+
+- `bash` + `openssl`: While great for Unix scripting, does not support typical Windows environments.
+- `python`: While great on platform portability, version (python 2 vs 3) and dependency portability (installing
+  dependencies requires a 3rd party tool and additional installation step) are weaker compared to Go.
+
+
 ## Differences with the helm provider based Tiller install
 
 There are a few enhancements in this module compared to setting up a Tiller install using [the `helm`
