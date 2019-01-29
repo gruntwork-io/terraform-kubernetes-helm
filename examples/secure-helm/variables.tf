@@ -11,12 +11,16 @@
 # These variables are expected to be passed in by the operator
 # ---------------------------------------------------------------------------------------------------------------------
 
-variable "namespace" {
-  description = "The namespace to deploy the helm server into."
+variable "tiller_namespace" {
+  description = "The namespace to deploy Tiller into."
+}
+
+variable "resource_namespace" {
+  description = "The namespace to that Tiller manages (where the Helm chart resources will be deployed into)."
 }
 
 variable "service_account_name" {
-  description = "The name of the service account to use for the helm server."
+  description = "The name of the service account to use for Tiller."
 }
 
 variable "tls_subject" {
