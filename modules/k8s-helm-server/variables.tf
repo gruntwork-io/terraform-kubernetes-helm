@@ -1,9 +1,14 @@
-variable "namespace" {
-  description = "The namespace to deploy the helm server into."
+# ---------------------------------------------------------------------------------------------------------------------
+# MODULE PARAMETERS
+# These variables are expected to be passed in by the operator when calling this terraform module.
+# ---------------------------------------------------------------------------------------------------------------------
+
+variable "tiller_namespace" {
+  description = "The namespace to deploy Tiller into."
 }
 
 variable "service_account" {
-  description = "The name of the service account to use for the helm server."
+  description = "The name of the service account to use for Tiller."
 }
 
 variable "tls_subject" {
@@ -19,14 +24,25 @@ variable "tls_subject" {
   # - country
 }
 
-variable "ca_certificate_rbac_roles" {
-  description = "The RBAC roles that should be granted access to the CA certificate keypair."
+# ---------------------------------------------------------------------------------------------------------------------
+# OPTIONAL MODULE PARAMETERS
+# These variables have defaults, but may be overridden by the operator.
+# ---------------------------------------------------------------------------------------------------------------------
+
+variable "grant_access_to_rbac_users" {
+  description = "The list of RBAC Users that should be granted access to the Tiller instance."
   type        = "list"
   default     = []
 }
 
-variable "tiller_certificate_rbac_roles" {
-  description = "The RBAC roles that should be granted access to the certificate keypair used by the Tiller server."
+variable "grant_access_to_rbac_groups" {
+  description = "The list of RBAC Groups that should be granted access to the Tiller instance."
+  type        = "list"
+  default     = []
+}
+
+variable "grant_access_to_rbac_service_accounts" {
+  description = "The list of ServiceAccounts that should be granted access to the Tiller instance."
   type        = "list"
   default     = []
 }
