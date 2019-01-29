@@ -19,7 +19,7 @@ repository will be updated with migration instructions to help smooth out the up
 * See [variables.tf](./variables.tf) for all the variables you can set on this module.
 * See [outputs.tf](./outputs.tf) for all the variables that are outputed by this module.
 * `kubectl` must be configured to authenticate against the target Kubernetes cluster.
-* This module uses the `kubergrunt` utiltity under the hood to deploy Tiller. See [the
+* This module uses the `kubergrunt` utility under the hood to deploy Tiller. See [the
   documentation](https://github.com/gruntwork-io/kubergrunt) for more information.
 
 
@@ -49,7 +49,7 @@ around cross compilation and portability, as well as its dependency management. 
 
 There are a few enhancements in this module compared to setting up a Tiller install using [the `helm`
 provider](https://www.terraform.io/docs/providers/helm/index.html#install_tiller). Eventually this will reduce down to
-the TLS certificate management once [Tiller is turned into a
+the TLS certificate management when [Tiller is turned into a
 resource](https://github.com/terraform-providers/terraform-provider-helm/issues/134):
 
 ### Automatic TLS generation
