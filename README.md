@@ -23,7 +23,7 @@ The following submodules are available in this module:
 
 - [k8s-namespace](/modules/k8s-namespace): Provision a Kubernetes `Namespace` with a default set of RBAC roles.
 - [k8s-service-account](/modules/k8s-service-account): Provision a Kubernetes `ServiceAccount`.
-- [k8s-helm-server](/modules/k8s-helm-server): Provision a namespaced secure Helm Server on an existing Kubernetes
+- [k8s-tiller](/modules/k8s-tiller): Provision a namespaced secure Helm Server on an existing Kubernetes
   cluster.
 
 ## What is Kubernetes?

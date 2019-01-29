@@ -7,6 +7,10 @@ variable "tiller_namespace" {
   description = "The namespace to deploy Tiller into."
 }
 
+variable "resource_namespace" {
+  description = "The namespace to that Tiller manages (where the Helm chart resources will be deployed into)."
+}
+
 variable "service_account" {
   description = "The name of the service account to use for Tiller."
 }
