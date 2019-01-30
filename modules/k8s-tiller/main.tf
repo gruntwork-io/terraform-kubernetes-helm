@@ -55,4 +55,6 @@ resource "null_resource" "configure_local_helm_client" {
   provisioner "local-exec" {
     command = "kubergrunt helm configure ${local.kubectl_config_options} --home ${local.helm_home_with_default} --tiller-namespace ${var.tiller_namespace} --resource-namespace ${var.resource_namespace} --set-kubectl-namespace ${local.configure_args}"
   }
+
+  depends_on = ["null_resource.grant_access_to_tiller"]
 }
