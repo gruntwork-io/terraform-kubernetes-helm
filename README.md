@@ -1,6 +1,6 @@
 [![Maintained by Gruntwork.io](https://img.shields.io/badge/maintained%20by-gruntwork.io-%235849a6.svg)](https://gruntwork.io/?ref=repo_terraform_kubernetes_helm)
 
-# Helm Server Modules
+# Helm Server Module
 
 This repo contains a Module for deploying Helm Server on Kubernetes clusters with [Terraform](https://www.terraform.io). 
 This repo is a part of [the Gruntwork Infrastructure as Code
@@ -17,7 +17,7 @@ This repo provides a Gruntwork IaC Package and has the following folder structur
   standalone Submodules.
 * [examples](/examples): This folder contains examples of how to use the Submodules. The [example root
   README](/examples/README.md) provides a quickstart guide on how to use the Submodules in this Module.
-* [test](/test): Automated tests for the Modules and examples.
+* [test](/test): Automated tests for the Submodules and examples.
 
 The following submodules are available in this module:
 
@@ -67,7 +67,7 @@ file from the charts on the cluster.
 
 This Module and its Submodules are maintained by [Gruntwork](http://www.gruntwork.io/). If you are looking for help or
 commercial support, send an email to
-[support@gruntwork.io](mailto:support@gruntwork.io?Subject=GKE%20Module).
+[support@gruntwork.io](mailto:support@gruntwork.io?Subject=Tiller%20Module).
 
 Gruntwork can help with:
 
@@ -97,4 +97,4 @@ MINOR, and PATCH versions on each release to indicate any incompatibilities.
 
 Please see [LICENSE](/LICENSE) for how the code in this repo is licensed.
 
-Copyright &copy; 2018 Gruntwork, Inc.
+Copyright &copy; 2019 Gruntwork, Inc.
