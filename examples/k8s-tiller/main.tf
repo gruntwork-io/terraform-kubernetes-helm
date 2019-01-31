@@ -31,7 +31,7 @@ module "tiller" {
   helm_client_rbac_group                = "${var.helm_client_rbac_group}"
   helm_client_rbac_service_account      = "${var.helm_client_rbac_service_account}"
 
-  # We force remove Tiller here for testing purposes, but in production, you may want more conservative options.
+  # We force remove Tiller here for testing purposes when you run destroy, but in production, you may want more conservative options.
   force_undeploy    = true
   undeploy_releases = true
 
