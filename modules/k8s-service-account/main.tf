@@ -52,7 +52,7 @@ resource "kubernetes_role_binding" "service_account_role_binding" {
 
   metadata {
     name        = "${var.name}-${element(var.rbac_roles, count.index)}-role-binding"
-    namespace   = "${var.namespace}"
+    namespace   = "${element(var.rbac_role_namespaces, count.index)}"
     labels      = "${var.labels}"
     annotations = "${var.annotations}"
   }

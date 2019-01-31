@@ -29,6 +29,14 @@ variable "rbac_roles" {
   default     = []
 }
 
+# We separately also need the list of namespaces of the roles to bind, because RoleBinding resource only works if it is
+# in the same namespace as the role.
+variable "rbac_role_namespaces" {
+  description = "List of names of the namespaces of the RBAC roles. This list must be synchronized with rbac_roles."
+  type        = "list"
+  default     = []
+}
+
 variable "labels" {
   description = "Map of string key default pairs that can be used to organize and categorize the service account. See the Kubernetes Reference for more info (https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)."
   type        = "map"

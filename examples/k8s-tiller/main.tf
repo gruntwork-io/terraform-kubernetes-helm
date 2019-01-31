@@ -31,6 +31,10 @@ module "tiller" {
   helm_client_rbac_group                = "${var.helm_client_rbac_group}"
   helm_client_rbac_service_account      = "${var.helm_client_rbac_service_account}"
 
+  # We force remove Tiller here for testing purposes, but in production, you may want more conservative options.
+  force_undeploy    = true
+  undeploy_releases = true
+
   # We specify these as dependencies for this module, because we can't destroy Tiller if the roles are removed (and thus
   # we lose access!)
   dependencies = [
@@ -68,10 +72,11 @@ module "tiller_service_account" {
   # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-service-account?ref=v0.1.0"
   source = "../../modules/k8s-service-account"
 
-  name           = "${var.service_account_name}"
-  namespace      = "${module.tiller_namespace.name}"
-  num_rbac_roles = 2
-  rbac_roles     = ["${module.tiller_namespace.rbac_access_all_role}", "${module.resource_namespace.rbac_access_all_role}"]
+  name                 = "${var.service_account_name}"
+  namespace            = "${module.tiller_namespace.name}"
+  num_rbac_roles       = 2
+  rbac_roles           = ["${module.tiller_namespace.rbac_access_all_role}", "${module.resource_namespace.rbac_access_all_role}"]
+  rbac_role_namespaces = ["${module.tiller_namespace.name}", "${module.resource_namespace.name}"]
 
   labels = {
     app = "tiller"
