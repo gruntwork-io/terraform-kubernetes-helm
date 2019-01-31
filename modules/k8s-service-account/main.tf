@@ -13,6 +13,18 @@ terraform {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# SET MODULE DEPENDENCY RESOURCE
+# This works around a terraform limitation where we can not specify module dependencies natively.
+# See https://github.com/hashicorp/terraform/issues/1178 for more discussion.
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "null_resource" "dependency_getter" {
+  provisioner "local-exec" {
+    command = "echo ${length(var.dependencies)}"
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # CREATE THE SERVICE ACCOUNT
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -27,6 +39,8 @@ resource "kubernetes_service_account" "service_account" {
   image_pull_secret               = "${var.secrets_for_pulling_images}"
   secret                          = "${var.secrets_for_pods}"
   automount_service_account_token = "${var.automount_service_account_token}"
+
+  depends_on = ["null_resource.dependency_getter"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -55,4 +69,16 @@ resource "kubernetes_role_binding" "service_account_role_binding" {
     name      = "${kubernetes_service_account.service_account.metadata.0.name}"
     namespace = "${var.namespace}"
   }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# SET MODULE CHILD DEPENDENCY RESOURCE
+# This works around a terraform limitation where we can not specify module dependencies natively.
+# See https://github.com/hashicorp/terraform/issues/1178 for more discussion.
+# ---------------------------------------------------------------------------------------------------------------------
+
+# List resource(s) that will be constructed last within the module, so that we can create an output that can be used to
+# chain dependencies.
+resource "null_resource" "dependency_setter" {
+  depends_on = ["kubernetes_role_binding.service_account_role_binding"]
 }

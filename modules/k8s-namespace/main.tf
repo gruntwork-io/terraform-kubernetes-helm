@@ -13,6 +13,18 @@ terraform {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# SET MODULE DEPENDENCY RESOURCE
+# This works around a terraform limitation where we can not specify module dependencies natively.
+# See https://github.com/hashicorp/terraform/issues/1178 for more discussion.
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "null_resource" "dependency_getter" {
+  provisioner "local-exec" {
+    command = "echo ${length(var.dependencies)}"
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # CREATE THE NAMESPACE
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -22,6 +34,8 @@ resource "kubernetes_namespace" "namespace" {
     labels      = "${var.labels}"
     annotations = "${var.annotations}"
   }
+
+  depends_on = ["null_resource.dependency_getter"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -34,7 +48,7 @@ resource "kubernetes_namespace" "namespace" {
 resource "kubernetes_role" "rbac_role_access_all" {
   metadata {
     name        = "${var.name}-access-all"
-    namespace   = "${var.name}"
+    namespace   = "${kubernetes_namespace.namespace.id}"
     labels      = "${var.labels}"
     annotations = "${var.annotations}"
   }
@@ -48,8 +62,10 @@ resource "kubernetes_role" "rbac_role_access_all" {
 
 resource "kubernetes_role" "rbac_role_access_read_only" {
   metadata {
-    name      = "${var.name}-access-read-only"
-    namespace = "${var.name}"
+    name        = "${var.name}-access-read-only"
+    namespace   = "${kubernetes_namespace.namespace.id}"
+    labels      = "${var.labels}"
+    annotations = "${var.annotations}"
   }
 
   rule {
@@ -57,4 +73,16 @@ resource "kubernetes_role" "rbac_role_access_read_only" {
     resources  = ["*"]
     verbs      = ["get", "list", "watch"]
   }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# SET MODULE CHILD DEPENDENCY RESOURCE
+# This works around a terraform limitation where we can not specify module dependencies natively.
+# See https://github.com/hashicorp/terraform/issues/1178 for more discussion.
+# ---------------------------------------------------------------------------------------------------------------------
+
+# List resource(s) that will be constructed last within the module, so that we can create an output that can be used to
+# chain dependencies.
+resource "null_resource" "dependency_setter" {
+  depends_on = ["kubernetes_role.rbac_role_access_read_only", "kubernetes_role.rbac_role_access_all"]
 }

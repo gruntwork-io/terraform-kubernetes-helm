@@ -30,6 +30,14 @@ module "tiller" {
   helm_client_rbac_user                 = "${var.helm_client_rbac_user}"
   helm_client_rbac_group                = "${var.helm_client_rbac_group}"
   helm_client_rbac_service_account      = "${var.helm_client_rbac_service_account}"
+
+  # We specify these as dependencies for this module, because we can't destroy Tiller if the roles are removed (and thus
+  # we lose access!)
+  dependencies = [
+    "${module.tiller_namespace.rbac_access_all_role}",
+    "${module.resource_namespace.rbac_access_all_role}",
+    "${module.tiller_service_account.depended_on}",
+  ]
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,9 +50,7 @@ module "tiller_namespace" {
   # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.1.0"
   source = "../../modules/k8s-namespace"
 
-  kubectl_config_context_name = "${var.kubectl_config_context_name}"
-  kubectl_config_path         = "${var.kubectl_config_path}"
-  name                        = "${var.tiller_namespace}"
+  name = "${var.tiller_namespace}"
 }
 
 module "resource_namespace" {
@@ -53,9 +59,7 @@ module "resource_namespace" {
   # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.1.0"
   source = "../../modules/k8s-namespace"
 
-  kubectl_config_context_name = "${var.kubectl_config_context_name}"
-  kubectl_config_path         = "${var.kubectl_config_path}"
-  name                        = "${var.resource_namespace}"
+  name = "${var.resource_namespace}"
 }
 
 module "tiller_service_account" {
@@ -64,11 +68,10 @@ module "tiller_service_account" {
   # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-service-account?ref=v0.1.0"
   source = "../../modules/k8s-service-account"
 
-  kubectl_config_context_name = "${var.kubectl_config_context_name}"
-  kubectl_config_path         = "${var.kubectl_config_path}"
-  name                        = "${var.service_account_name}"
-  namespace                   = "${module.tiller_namespace.name}"
-  rbac_roles                  = ["${module.tiller_namespace.rbac_access_all_role}", "${module.resource_namespace.rbac_access_all_role}"]
+  name           = "${var.service_account_name}"
+  namespace      = "${module.tiller_namespace.name}"
+  num_rbac_roles = 2
+  rbac_roles     = ["${module.tiller_namespace.rbac_access_all_role}", "${module.resource_namespace.rbac_access_all_role}"]
 
   labels = {
     app = "tiller"

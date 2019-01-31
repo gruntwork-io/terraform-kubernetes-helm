@@ -1,3 +1,106 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# DEPLOY TILLER, GRANT ACCESS, AND CONFIGURE LOCAL HELM CLIENT
+# These templates user kubergrunt to deploy a new Tiller instance, while granting access to the specified RBAC entities.
+# Optionally configure the local helm client.
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ---------------------------------------------------------------------------------------------------------------------
+# SET TERRAFORM REQUIREMENTS FOR RUNNING THIS MODULE
+# ---------------------------------------------------------------------------------------------------------------------
+
+terraform {
+  required_version = "~> 0.9"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# SET MODULE DEPENDENCY RESOURCE
+# This works around a terraform limitation where we can not specify module dependencies natively.
+# See https://github.com/hashicorp/terraform/issues/1178 for more discussion.
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "null_resource" "dependency_getter" {
+  provisioner "local-exec" {
+    command = "echo ${length(var.dependencies)}"
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# DEPLOY TILLER
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "null_resource" "tiller" {
+  triggers {
+    tiller_namespace = "${var.tiller_namespace}"
+  }
+
+  provisioner "local-exec" {
+    command = "kubergrunt helm deploy ${local.kubectl_config_options} --service-account ${var.service_account} --tiller-namespace ${var.tiller_namespace} ${local.tls_config}"
+  }
+
+  provisioner "local-exec" {
+    command = "kubergrunt helm undeploy ${local.kubectl_config_options} --home ${local.helm_home_with_default} --tiller-namespace ${var.tiller_namespace} ${local.undeploy_args}"
+    when    = "destroy"
+  }
+
+  depends_on = ["null_resource.dependency_getter"]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# GRANT ACCESS TO TILLER TO THE SPECIFIED RBAC ENTITIES
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "null_resource" "grant_access_to_tiller" {
+  count = "${trimspace(local.grant_args) == "" ? 0 : 1}"
+
+  triggers {
+    grant_args = "${local.grant_args}"
+  }
+
+  provisioner "local-exec" {
+    command = "kubergrunt helm grant ${local.kubectl_config_options} --tiller-namespace ${var.tiller_namespace} ${local.tls_config} ${local.grant_args}"
+  }
+
+  depends_on = ["null_resource.tiller", "null_resource.dependency_getter"]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# CONFIGURE THE LOCAL HELM CLIENT
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "null_resource" "configure_local_helm_client" {
+  count = "${trimspace(local.configure_args) == "" ? 0 : 1}"
+
+  triggers {
+    configure_args = "${local.configure_args}"
+  }
+
+  provisioner "local-exec" {
+    command = "kubergrunt helm configure ${local.kubectl_config_options} --home ${local.helm_home_with_default} --tiller-namespace ${var.tiller_namespace} --resource-namespace ${var.resource_namespace} --set-kubectl-namespace ${local.configure_args}"
+  }
+
+  depends_on = ["null_resource.grant_access_to_tiller", "null_resource.dependency_getter"]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# SET MODULE CHILD DEPENDENCY RESOURCE
+# This works around a terraform limitation where we can not specify module dependencies natively.
+# See https://github.com/hashicorp/terraform/issues/1178 for more discussion.
+# ---------------------------------------------------------------------------------------------------------------------
+
+# List resource(s) that will be constructed last within the module, so that we can create an output that can be used to
+# chain dependencies.
+resource "null_resource" "dependency_setter" {
+  depends_on = [
+    "null_resource.tiller",
+    "null_resource.grant_access_to_tiller",
+    "null_resource.configure_local_helm_client",
+  ]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# INTERPOLATE AND CONSTRUCT COMMAND ARGUMENTS
+# ---------------------------------------------------------------------------------------------------------------------
+
 // TODO: When we have package-terraform-utilities available
 // - Implement multiline shell commands by selecting the escape character based on platform (\ for unix, ^ for windows)
 // - Implement command required
@@ -26,35 +129,4 @@ locals {
         : var.helm_client_rbac_service_account != "" ? "--rbac-service-account ${var.helm_client_rbac_service_account}"
           : ""
   }"
-}
-
-resource "null_resource" "tiller" {
-  provisioner "local-exec" {
-    command = "kubergrunt helm deploy ${local.kubectl_config_options} --service-account ${var.service_account} --tiller-namespace ${var.tiller_namespace} ${local.tls_config}"
-  }
-
-  provisioner "local-exec" {
-    command = "kubergrunt helm undeploy ${local.kubectl_config_options} --home ${local.helm_home_with_default} --tiller-namespace ${var.tiller_namespace} ${local.undeploy_args}"
-    when    = "destroy"
-  }
-}
-
-resource "null_resource" "grant_access_to_tiller" {
-  count = "${trimspace(local.grant_args) == "" ? 0 : 1}"
-
-  provisioner "local-exec" {
-    command = "kubergrunt helm grant ${local.kubectl_config_options} --tiller-namespace ${var.tiller_namespace} ${local.tls_config} ${local.grant_args}"
-  }
-
-  depends_on = ["null_resource.tiller"]
-}
-
-resource "null_resource" "configure_local_helm_client" {
-  count = "${local.configure_args == "" ? 0 : 1}"
-
-  provisioner "local-exec" {
-    command = "kubergrunt helm configure ${local.kubectl_config_options} --home ${local.helm_home_with_default} --tiller-namespace ${var.tiller_namespace} --resource-namespace ${var.resource_namespace} --set-kubectl-namespace ${local.configure_args}"
-  }
-
-  depends_on = ["null_resource.grant_access_to_tiller"]
 }

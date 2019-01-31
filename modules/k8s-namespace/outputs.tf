@@ -12,3 +12,8 @@ output "rbac_access_read_only_role" {
   description = "The name of the RBAC role that grants read only permissions on the namespace."
   value       = "${kubernetes_role.rbac_role_access_read_only.metadata.0.name}"
 }
+
+output "depended_on" {
+  description = "This output can be used to depend on the resources in this module."
+  value       = "${null_resource.dependency_setter.id}"
+}

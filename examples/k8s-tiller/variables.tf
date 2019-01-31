@@ -56,7 +56,7 @@ variable "grant_access_to_rbac_groups" {
 }
 
 variable "grant_access_to_rbac_service_accounts" {
-  description = "The list of ServiceAccounts that should be granted access to the Tiller instance."
+  description = "The list of ServiceAccounts that should be granted access to the Tiller instance. The ServiceAccount should be encoded as NAMESPACE/NAME."
   type        = "list"
   default     = []
 }
@@ -77,6 +77,6 @@ variable "helm_client_rbac_group" {
 }
 
 variable "helm_client_rbac_service_account" {
-  description = "If set, will setup the local helm client to authenticate using this ServiceAccount. The ServiceAccount must be in the grant_access_to_rbac_service_accounts list."
+  description = "If set, will setup the local helm client to authenticate using this ServiceAccount. The ServiceAccount should be encoded as NAMESPACE/NAME. The ServiceAccount must be in the grant_access_to_rbac_service_accounts list."
   default     = ""
 }
