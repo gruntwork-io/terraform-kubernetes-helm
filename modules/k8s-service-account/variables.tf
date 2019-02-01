@@ -29,6 +29,15 @@ variable "rbac_roles" {
   default     = []
 }
 
+# We separately also need the list of namespaces of the roles to bind, because RoleBinding resource only works if it is
+# in the same namespace as the role.
+# When terraform 0.12 lands, we can use a list of maps instead of tracking the role names and namespaces separately.
+variable "rbac_role_namespaces" {
+  description = "List of names of the namespaces of the RBAC roles. This list must be synchronized with rbac_roles. This is necessary because the role binding needs to be created in the same namespace as the role."
+  type        = "list"
+  default     = []
+}
+
 variable "labels" {
   description = "Map of string key default pairs that can be used to organize and categorize the service account. See the Kubernetes Reference for more info (https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)."
   type        = "map"
@@ -54,6 +63,24 @@ variable "secrets_for_pulling_images" {
 
 variable "secrets_for_pods" {
   description = "A list of secrets allowed to be used by pods running using this Service Account."
+  type        = "list"
+  default     = []
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# MODULE DEPENDENCIES
+# Workaround Terraform limitation where there is no module depends_on.
+# See https://github.com/hashicorp/terraform/issues/1178 for more details.
+# This can be used to make sure the module resources are created after other bootstrapping resources have been created.
+# For example, in GKE, the default permissions are such that you do not have enough authorization to be able to create
+# additional Roles in the system. Therefore, you need to first create a ClusterRoleBinding to promote your account
+# before you can apply this module. In this use case, you can pass in the ClusterRoleBinding as a dependency into this
+# module:
+# dependencies = ["${kubernetes_cluster_role_binding.user.metadata.0.name}"]
+# ---------------------------------------------------------------------------------------------------------------------
+
+variable "dependencies" {
+  description = "Create a dependency between the resources in this module to the interpolated values in this list (and thus the source resources). In other words, the resources in this module will now depend on the resources backing the values in this list such that those resources need to be created before the resources in this module, and the resources in this module need to be destroyed before the resources in the list."
   type        = "list"
   default     = []
 }

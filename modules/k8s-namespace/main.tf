@@ -13,6 +13,20 @@ terraform {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# SET MODULE DEPENDENCY RESOURCE
+# This works around a terraform limitation where we can not specify module dependencies natively.
+# See https://github.com/hashicorp/terraform/issues/1178 for more discussion.
+# By resolving and computing the dependencies list, we are able to make all the resources in this module depend on the
+# resources backing the values in the dependencies list.
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "null_resource" "dependency_getter" {
+  provisioner "local-exec" {
+    command = "echo ${length(var.dependencies)}"
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # CREATE THE NAMESPACE
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -22,6 +36,8 @@ resource "kubernetes_namespace" "namespace" {
     labels      = "${var.labels}"
     annotations = "${var.annotations}"
   }
+
+  depends_on = ["null_resource.dependency_getter"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -44,6 +60,8 @@ resource "kubernetes_role" "rbac_role_access_all" {
     resources  = ["*"]
     verbs      = ["*"]
   }
+
+  depends_on = ["null_resource.dependency_getter"]
 }
 
 resource "kubernetes_role" "rbac_role_access_read_only" {
@@ -57,4 +75,6 @@ resource "kubernetes_role" "rbac_role_access_read_only" {
     resources  = ["*"]
     verbs      = ["get", "list", "watch"]
   }
+
+  depends_on = ["null_resource.dependency_getter"]
 }
