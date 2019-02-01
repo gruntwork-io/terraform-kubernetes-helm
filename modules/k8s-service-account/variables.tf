@@ -24,18 +24,15 @@ variable "num_rbac_roles" {
 }
 
 variable "rbac_roles" {
-  description = "List of names of the RBAC roles that should be bound to the service account. If this list is non-empty, you must also pass in num_rbac_roles specifying the number of roles."
+  description = "List of maps representing RBAC roles that should be bound to the service account. If this list is non-empty, you must also pass in num_rbac_roles specifying the number of roles. This expects a list of maps, each with keys name and namespace."
   type        = "list"
-  default     = []
-}
 
-# We separately also need the list of namespaces of the roles to bind, because RoleBinding resource only works if it is
-# in the same namespace as the role.
-# When terraform 0.12 lands, we can use a list of maps instead of tracking the role names and namespaces separately.
-variable "rbac_role_namespaces" {
-  description = "List of names of the namespaces of the RBAC roles. This list must be synchronized with rbac_roles. This is necessary because the role binding needs to be created in the same namespace as the role."
-  type        = "list"
-  default     = []
+  # Example:
+  # rbac_roles = [{
+  #   name      = "${module.namespace.rbac_access_read_only_role}"
+  #   namespace = "${module.namespace.name}"
+  # }]
+  default = []
 }
 
 variable "labels" {

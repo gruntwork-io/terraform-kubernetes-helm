@@ -53,8 +53,8 @@ resource "kubernetes_role_binding" "service_account_role_binding" {
   count = "${var.num_rbac_roles}"
 
   metadata {
-    name        = "${var.name}-${element(var.rbac_roles, count.index)}-role-binding"
-    namespace   = "${element(var.rbac_role_namespaces, count.index)}"
+    name        = "${var.name}-${lookup(var.rbac_roles[count.index], "name")}-role-binding"
+    namespace   = "${lookup(var.rbac_roles[count.index], "namespace")}"
     labels      = "${var.labels}"
     annotations = "${var.annotations}"
   }
@@ -62,7 +62,7 @@ resource "kubernetes_role_binding" "service_account_role_binding" {
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "Role"
-    name      = "${element(var.rbac_roles, count.index)}"
+    name      = "${lookup(var.rbac_roles[count.index], "name")}"
   }
 
   subject {
