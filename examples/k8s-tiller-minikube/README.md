@@ -21,6 +21,7 @@ using `minikube` as our target Kubernetes cluster. Here are the steps:
 1. [Apply the terraform code](#apply-the-terraform-code)
 1. [Verify the deployment](#verify-tiller-deployment)
 1. [Granting access to additional roles](#granting-access-to-additional-users)
+1. [Upgrading the deployed Tiller instance](#upgrading-deployed-tiller)
 
 
 ## Setting up your Kubernetes cluster: Minikube
@@ -173,7 +174,17 @@ This in turn allows your users to configure their local client using `kubergrunt
 kubergrunt helm configure --tiller-namespace NAMESPACE_OF_TILLER --rbac-group dev
 ```
 
-At then end of this, your users should have the same helm client setup as above.
+At the end of this, your users should have the same helm client setup as above.
+
+
+## Upgrading Deployed Tiller
+
+At some point in the lifetime of the Tiller deployment, you will want to upgrade it. You can upgrade the deployed Tiller
+instance using the helm client with the following command:
+
+```
+helm init --upgrade --tiller-namespace TILLER_NAMESPACE
+```
 
 
 ## Appendix A: Why kubergrunt?
