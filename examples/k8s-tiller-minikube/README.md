@@ -14,7 +14,7 @@ before continuing with this guide for a background on Helm, Tiller, and the secu
 ## Overview
 
 In this guide we will walk through the steps necessary to get up and running with deploying Tiller using this module,
-using `minikube` as our target Kubernetes cluster. Here are the steps:
+using `minikube` to deploy our target Kubernetes cluster. Here are the steps:
 
 1. [Install and setup `minikube`](#setting-up-your-kubernetes-cluster-minikube)
 1. [Install the necessary tools](#installing-necessary-tools)
@@ -76,7 +76,7 @@ Tiller! To deploy Tiller, we will use the example Terraform code at the root of 
     - `terraform apply`
     - Fill in the required variables based on your needs. <!-- TODO: show example inputs here -->
 
-The terraform code creates a few resources before deploying Tiller using `kubergrunt`:
+The Terraform code creates a few resources before deploying Tiller using `kubergrunt`:
 
 - A Kubernetes `Namespace` (the `tiller-namespace`) to house the Tiller instance. This namespace is where all the
   Kubernetes resources that Tiller needs to function will live. In production, you will want to lock down access to this
@@ -113,7 +113,7 @@ deployment, `kubergrunt` will:
 
     - Install the client certificate key pair to the helm home directory so the client can use it.
 
-At the end of all this, you should now have a working Tiller deployment with your helm client configured to access it.
+You should now have a working Tiller deployment with your helm client configured to access it.
 So let's verify that in the next step!
 
 
@@ -216,4 +216,4 @@ functionalities here in pure Terraform code:
 
 Note that [we intend to implement a pure Terraform version of this when the Helm provider is
 updated](https://github.com/gruntwork-io/terraform-kubernetes-helm/issues/13), but we plan to continue to maintain the
-`kubergrunt` approach for folks who are weary of leaking secrets into Terraform state.
+`kubergrunt` approach for folks who are wary of leaking secrets into Terraform state.

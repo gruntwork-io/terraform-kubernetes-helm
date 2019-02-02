@@ -20,7 +20,7 @@ The general idea is to:
 1. Setup a `kubectl` config context that is configured to authenticate to the deployed cluster.
 1. Install the necessary prerequisites tools:
     - [`helm` client](https://docs.helm.sh/using_helm/#install-helm)
-    - [`kubergrunt`](https://github.com/gruntwork-io/kubergrunt)
+    - [`kubergrunt`](https://github.com/gruntwork-io/kubergrunt#installation)
 1. Provision a [`Namespace`](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) and
    [`ServiceAccount`](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/) to house the
    Tiller instance.
