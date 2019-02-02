@@ -40,7 +40,11 @@ module "service_account_access_all" {
   name           = "${var.name}-admin"
   namespace      = "${module.namespace.name}"
   num_rbac_roles = 1
-  rbac_roles     = ["${module.namespace.rbac_access_all_role}"]
+
+  rbac_roles = [{
+    name      = "${module.namespace.rbac_access_all_role}"
+    namespace = "${module.namespace.name}"
+  }]
 
   # How to tag the service account with a label
   labels = {
@@ -57,7 +61,11 @@ module "service_account_access_read_only" {
   name           = "${var.name}-read-only"
   namespace      = "${module.namespace.name}"
   num_rbac_roles = 1
-  rbac_roles     = ["${module.namespace.rbac_access_read_only_role}"]
+
+  rbac_roles = [{
+    name      = "${module.namespace.rbac_access_read_only_role}"
+    namespace = "${module.namespace.name}"
+  }]
 
   # How to tag the service account with a label
   labels = {

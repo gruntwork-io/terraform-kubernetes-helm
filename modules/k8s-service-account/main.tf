@@ -13,6 +13,20 @@ terraform {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# SET MODULE DEPENDENCY RESOURCE
+# This works around a terraform limitation where we can not specify module dependencies natively.
+# See https://github.com/hashicorp/terraform/issues/1178 for more discussion.
+# By resolving and computing the dependencies list, we are able to make all the resources in this module depend on the
+# resources backing the values in the dependencies list.
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "null_resource" "dependency_getter" {
+  provisioner "local-exec" {
+    command = "echo ${length(var.dependencies)}"
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # CREATE THE SERVICE ACCOUNT
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -27,6 +41,8 @@ resource "kubernetes_service_account" "service_account" {
   image_pull_secret               = "${var.secrets_for_pulling_images}"
   secret                          = "${var.secrets_for_pods}"
   automount_service_account_token = "${var.automount_service_account_token}"
+
+  depends_on = ["null_resource.dependency_getter"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -37,8 +53,8 @@ resource "kubernetes_role_binding" "service_account_role_binding" {
   count = "${var.num_rbac_roles}"
 
   metadata {
-    name        = "${var.name}-${element(var.rbac_roles, count.index)}-role-binding"
-    namespace   = "${var.namespace}"
+    name        = "${var.name}-${lookup(var.rbac_roles[count.index], "name")}-role-binding"
+    namespace   = "${lookup(var.rbac_roles[count.index], "namespace")}"
     labels      = "${var.labels}"
     annotations = "${var.annotations}"
   }
@@ -46,7 +62,7 @@ resource "kubernetes_role_binding" "service_account_role_binding" {
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "Role"
-    name      = "${element(var.rbac_roles, count.index)}"
+    name      = "${lookup(var.rbac_roles[count.index], "name")}"
   }
 
   subject {
@@ -55,4 +71,6 @@ resource "kubernetes_role_binding" "service_account_role_binding" {
     name      = "${kubernetes_service_account.service_account.metadata.0.name}"
     namespace = "${var.namespace}"
   }
+
+  depends_on = ["null_resource.dependency_getter"]
 }
