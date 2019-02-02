@@ -47,6 +47,8 @@ resource "kubernetes_namespace" "namespace" {
 # - namespace-access-read-only: Read only permissions on all resources in the namespace.
 # - namespace-tiller-metadata-access: Minimal permissions for Tiller to manage its metadata in this namespace (if this
 #                                     namespace is where Tiller is deployed).
+# - namespace-tiller-resource-access: Minimal permissions for Tiller to manage resources in this namespace as Helm
+#                                     charts.
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "kubernetes_role" "rbac_role_access_all" {
