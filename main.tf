@@ -49,12 +49,11 @@ module "tiller_service_account" {
 
   rbac_roles = [
     {
-      # TODO: this should be something more limited in scope
-      name      = "${module.tiller_namespace.rbac_access_all_role}"
+      name      = "${module.tiller_namespace.rbac_tiller_metadata_access_role}"
       namespace = "${module.tiller_namespace.name}"
     },
     {
-      name      = "${module.resource_namespace.rbac_access_all_role}"
+      name      = "${module.resource_namespace.rbac_tiller_resource_access_role}"
       namespace = "${module.resource_namespace.name}"
     },
   ]
