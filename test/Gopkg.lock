@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  digest = "1:4d6f036ea3fe636bcb2e89850bcdc62a771354e157cd51b8b22a2de8562bf663"
+  name = "cloud.google.com/go"
+  packages = ["compute/metadata"]
+  pruneopts = "UT"
+  revision = "28a4bc8c44b3acbcc482cff0cdf7de29a4688b61"
+  version = "v0.35.1"
+
+[[projects]]
   digest = "1:17632b96c871d941111bfa7a41e9b18f189a9096f933f6e9058bde0df76f162f"
   name = "github.com/aws/aws-sdk-go"
   packages = [
@@ -85,6 +93,14 @@
   pruneopts = "UT"
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:d0557c61d3acd22f04f7b6b675b847381034b229b7dce10b1d31bfa0d7f30017"
+  name = "github.com/go-errors/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d98b870cc4e05f1545532a80e9909be8216095b6"
 
 [[projects]]
   digest = "1:ec6f9bf5e274c833c911923c9193867f3f18788c461f76f05f62bb1510e0ae65"
@@ -175,7 +191,16 @@
   revision = "c63ab54fda8f77302f8d414e19933f2b6026a089"
 
 [[projects]]
-  digest = "1:1a085fdd0c430f700d84f9b1b05ccecd88d8fe5ef492aefa64cca8afc4f667f8"
+  digest = "1:b17934d012a71aa0367870f2a0d0a7b117cb823768295b0e9e1b6e39fab6ebbd"
+  name = "github.com/gruntwork-io/gruntwork-cli"
+  packages = ["errors"]
+  pruneopts = "UT"
+  revision = "6a2163138f3d10377f313428e7e367b0a6c0c1c9"
+  version = "v0.4.2"
+
+[[projects]]
+  branch = "yori-k8s-test-service-account"
+  digest = "1:9fb55c620f53e7935db233e0b8c5cd75d85ed6fea5189371a5fb08174316e36e"
   name = "github.com/gruntwork-io/terratest"
   packages = [
     "modules/aws",
@@ -194,8 +219,7 @@
     "modules/test-structure",
   ]
   pruneopts = "UT"
-  revision = "f8ce84b0f4edcb6d2b6d4c5c40e497a645eb8df6"
-  version = "v0.13.21"
+  revision = "4ec522074ed61b5573b0b18d9cdf7580b4c460cf"
 
 [[projects]]
   digest = "1:8eb1de8112c9924d59bf1d3e5c26f5eaa2bfc2a5fcbb92dc1c2e4546d695f277"
@@ -300,6 +324,14 @@
   version = "v1.3.0"
 
 [[projects]]
+  digest = "1:b24d38b282bacf9791408a080f606370efa3d364e4b5fd9ba0f7b87786d3b679"
+  name = "github.com/urfave/cli"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
+  version = "v1.20.0"
+
+[[projects]]
   branch = "master"
   digest = "1:30e9f5bea4df0d1a573ed89a85cc680ab05dfc078f6a21e627db236f29650a11"
   name = "golang.org/x/crypto"
@@ -334,11 +366,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:62bf0fe61cbb370876c32f605ce8f9dd16ace3fdeab28f7a9d7b46f2ee2a87a4"
+  digest = "1:c58bbfb91df5a7eae08cb9894f9897165f254e459f07666986cd448f9be4ad35"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
+    "google",
     "internal",
+    "jws",
+    "jwt",
   ]
   pruneopts = "UT"
   revision = "36a7019397c4c86cf59eeab3bc0d188bac444277"
@@ -386,14 +421,17 @@
   revision = "85acf8d2951cb2a3bde7632f9ff273ef0379bcbd"
 
 [[projects]]
-  digest = "1:9e29a0ec029d012437d88da3ccccf18adcdce069cab08d462056c2c6bb006505"
+  digest = "1:7bc25c2efff76b31f146caf630c617be9b666c6164f0632050466fbec0500125"
   name = "google.golang.org/appengine"
   packages = [
+    ".",
     "cloudsql",
     "internal",
+    "internal/app_identity",
     "internal/base",
     "internal/datastore",
     "internal/log",
+    "internal/modules",
     "internal/remote_api",
     "internal/urlfetch",
     "urlfetch",
@@ -504,7 +542,7 @@
 
 [[projects]]
   branch = "release-9.0"
-  digest = "1:331e0a5f31795efb5bf4a4ee58d7278570a20d8e69ea9fb57f9f054cd591c848"
+  digest = "1:fe891a0c96f0cb506f824b24b5516198b51a4f2a089931c82177a88501b6f709"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -546,8 +584,10 @@
     "pkg/apis/clientauthentication/v1beta1",
     "pkg/version",
     "plugin/pkg/client/auth/exec",
+    "plugin/pkg/client/auth/gcp",
     "rest",
     "rest/watch",
+    "third_party/forked/golang/template",
     "tools/auth",
     "tools/clientcmd",
     "tools/clientcmd/api",
@@ -561,6 +601,7 @@
     "util/flowcontrol",
     "util/homedir",
     "util/integer",
+    "util/jsonpath",
   ]
   pruneopts = "UT"
   revision = "832c4d89038dd351f988d3d6164617e96af47d00"
@@ -572,8 +613,10 @@
     "github.com/gruntwork-io/terratest/modules/k8s",
     "github.com/gruntwork-io/terratest/modules/logger",
     "github.com/gruntwork-io/terratest/modules/random",
+    "github.com/gruntwork-io/terratest/modules/shell",
     "github.com/gruntwork-io/terratest/modules/terraform",
     "github.com/gruntwork-io/terratest/modules/test-structure",
+    "github.com/mitchellh/go-homedir",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
     "k8s.io/api/authorization/v1",
