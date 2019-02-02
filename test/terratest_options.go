@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -21,11 +20,11 @@ func createExampleK8SNamespaceTerraformOptions(t *testing.T, uniqueID string, te
 func createExampleK8STillerTerraformOptions(
 	t *testing.T,
 	templatePath string,
+	helmHome string,
 	uniqueID string,
 	testServiceAccountName string,
 	testServiceAccountNamespace string,
 ) *terraform.Options {
-	helmHome := filepath.Join(templatePath, ".helm")
 	tillerNamespaceName := fmt.Sprintf("%s-tiller", strings.ToLower(uniqueID))
 	resourceNamespaceName := fmt.Sprintf("%s-resources", strings.ToLower(uniqueID))
 	tillerServiceAccountName := fmt.Sprintf("%s-tiller-service-account", strings.ToLower(uniqueID))

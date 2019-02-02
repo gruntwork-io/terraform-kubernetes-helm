@@ -70,11 +70,11 @@ module "tiller_service_account" {
 
 resource "null_resource" "tiller" {
   provisioner "local-exec" {
-    command = "kubergrunt helm deploy ${local.kubectl_config_options} --service-account ${module.tiller_service_account.name} --tiller-namespace ${module.tiller_namespace.name} ${local.tls_config} ${local.client_tls_config} --helm-home ${local.helm_home_with_default} ${local.configure_args}"
+    command = "kubergrunt helm deploy ${local.kubectl_config_options} --service-account ${module.tiller_service_account.name} --resource-namespace ${module.resource_namespace.name} --tiller-namespace ${module.tiller_namespace.name} ${local.tls_config} ${local.client_tls_config} --helm-home ${local.helm_home_with_default} ${local.configure_args}"
   }
 
   provisioner "local-exec" {
-    command = "kubergrunt helm undeploy ${local.kubectl_config_options} --home ${local.helm_home_with_default} --tiller-namespace ${module.tiller_namespace.name} ${local.undeploy_args}"
+    command = "kubergrunt helm undeploy ${local.kubectl_config_options} --helm-home ${local.helm_home_with_default} --tiller-namespace ${module.tiller_namespace.name} ${local.undeploy_args}"
     when    = "destroy"
   }
 }

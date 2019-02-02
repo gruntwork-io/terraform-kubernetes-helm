@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -12,7 +13,6 @@ import (
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/gruntwork-io/terratest/modules/test-structure"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,7 +33,12 @@ func TestK8STiller(t *testing.T) {
 	test_structure.RunTestStage(t, "create_test_copy_of_examples", func() {
 		k8sTillerTerraformModulePath := test_structure.CopyTerraformFolderToTemp(t, "..", ".")
 		logger.Logf(t, "path to test folder %s\n", k8sTillerTerraformModulePath)
+		helmHome := filepath.Join(k8sTillerTerraformModulePath, ".helm")
+		// make sure to create the helm home directory
+		require.NoError(t, os.Mkdir(helmHome, 0700))
+
 		test_structure.SaveString(t, workingDir, "k8sTillerTerraformModulePath", k8sTillerTerraformModulePath)
+		test_structure.SaveString(t, workingDir, "helmHome", helmHome)
 	})
 
 	// Create a ServiceAccount in its own namespace that we can use to login as for testing purposes.
@@ -63,11 +68,12 @@ func TestK8STiller(t *testing.T) {
 
 	test_structure.RunTestStage(t, "create_terratest_options", func() {
 		uniqueID := test_structure.LoadString(t, workingDir, "uniqueID")
+		helmHome := test_structure.LoadString(t, workingDir, "helmHome")
 		testServiceAccountName := test_structure.LoadString(t, workingDir, "testServiceAccountName")
 		testServiceAccountNamespace := test_structure.LoadString(t, workingDir, "testServiceAccountNamespace")
-
 		k8sTillerTerraformModulePath := test_structure.LoadString(t, workingDir, "k8sTillerTerraformModulePath")
-		k8sTillerTerratestOptions := createExampleK8STillerTerraformOptions(t, k8sTillerTerraformModulePath, uniqueID, testServiceAccountName, testServiceAccountNamespace)
+
+		k8sTillerTerratestOptions := createExampleK8STillerTerraformOptions(t, k8sTillerTerraformModulePath, helmHome, uniqueID, testServiceAccountName, testServiceAccountNamespace)
 
 		test_structure.SaveTerraformOptions(t, workingDir, k8sTillerTerratestOptions)
 	})
@@ -87,6 +93,7 @@ func TestK8STiller(t *testing.T) {
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
+		helmHome := test_structure.LoadString(t, workingDir, "helmHome")
 		k8sNamespaceTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
 		resourceNamespace := k8sNamespaceTerratestOptions.Vars["resource_namespace"].(string)
 		tmpConfigPath := test_structure.LoadString(t, workingDir, "tmpKubectlConfigPath")
@@ -97,7 +104,7 @@ func TestK8STiller(t *testing.T) {
 		runHelm(
 			t,
 			kubectlOptions,
-			getHelmHome(t),
+			helmHome,
 			"install",
 			"stable/kubernetes-dashboard",
 			"--wait",
@@ -129,11 +136,4 @@ func runHelm(t *testing.T, options *k8s.KubectlOptions, helmHome string, args ..
 		},
 	}
 	shell.RunCommand(t, cmd)
-}
-
-func getHelmHome(t *testing.T) string {
-	home, err := homedir.Dir()
-	require.NoError(t, err)
-	helmHome := filepath.Join(home, ".helm")
-	return helmHome
 }
