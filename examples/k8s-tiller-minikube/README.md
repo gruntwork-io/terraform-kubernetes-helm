@@ -186,6 +186,10 @@ instance using the helm client with the following command:
 helm init --upgrade --tiller-namespace TILLER_NAMESPACE
 ```
 
+**Note**: You need to be an administrator to run this command. Specifically, this should be done with the same `kubectl`
+context as the one used to deploy Tiller. You can use the `--kube-context` option to use a different context from the
+default.
+
 
 ## Appendix A: Why kubergrunt?
 

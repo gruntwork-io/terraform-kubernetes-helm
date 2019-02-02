@@ -110,6 +110,22 @@ func TestK8STiller(t *testing.T) {
 			"--wait",
 		)
 	})
+
+	test_structure.RunTestStage(t, "validate_upgrade", func() {
+		// Make sure the upgrade command mentioned in the docs actually works
+		helmHome := test_structure.LoadString(t, workingDir, "helmHome")
+		tmpConfigPath := test_structure.LoadString(t, workingDir, "tmpKubectlConfigPath")
+		kubectlOptions := k8s.NewKubectlOptions("", tmpConfigPath)
+
+		runHelm(
+			t,
+			kubectlOptions,
+			helmHome,
+			"init",
+			"--upgrade",
+			"--wait",
+		)
+	})
 }
 
 func runHelm(t *testing.T, options *k8s.KubectlOptions, helmHome string, args ...string) {
