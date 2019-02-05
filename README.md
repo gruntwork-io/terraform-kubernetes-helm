@@ -26,8 +26,8 @@ The general idea is to:
    Tiller instance.
 1. Deploy Tiller.
 
-You can checkout the [`k8s-tiller` example documentation](/examples/k8s-tiller/README.md) for detailed instructions on
-deploying against `minikube`.
+You can checkout the [`k8s-tiller-minikube` example documentation](/examples/k8s-tiller-minikube/README.md) for detailed
+instructions on deploying against `minikube`.
 
 
 ## What is in this repo
