@@ -46,6 +46,7 @@ This repo provides a Gruntwork IaC Package and has the following folder structur
 The following submodules are available in this module:
 
 - [k8s-namespace](/modules/k8s-namespace): Provision a Kubernetes `Namespace` with a default set of RBAC roles.
+- [k8s-namespace-roles](/modules/k8s-namespace-roles): Provision a default set of RBAC roles to use in a `Namespace`.
 - [k8s-service-account](/modules/k8s-service-account): Provision a Kubernetes `ServiceAccount`.
 
 
