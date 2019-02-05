@@ -8,6 +8,10 @@ be provided by this module:
 - `namespace-access-all`: Admin level permissions in the namespace. Ability to read, write, and delete all resources in
   the namespace.
 - `namespace-access-read-only`: Read only permissions to all resources in the namespace.
+- `namespace-tiller-metadata-access`: Minimal permissions for Tiller to manage its metadata in this namespace (if this
+  namespace is where Tiller is deployed).
+- `namespace-tiller-resource-access`: Minimal permissions for Tiller to manage resources in this namespace as Helm
+  charts.  
 
 
 ## How do you use this module?
