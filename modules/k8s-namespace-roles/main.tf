@@ -112,5 +112,15 @@ resource "kubernetes_role" "rbac_tiller_resource_access" {
     verbs     = ["*"]
   }
 
+  # We include policy PodDisruptionBudget which is useful for the helm charts to manage
+  rule {
+    api_groups = [
+      "policy",
+    ]
+
+    resources = ["poddisruptionbudgets"]
+    verbs     = ["*"]
+  }
+
   depends_on = ["null_resource.dependency_getter"]
 }
