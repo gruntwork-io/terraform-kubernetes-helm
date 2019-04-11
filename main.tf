@@ -85,7 +85,7 @@ locals {
 
 resource "null_resource" "tiller" {
   provisioner "local-exec" {
-    command = "kubergrunt helm deploy ${local.kubectl_config_options} --service-account ${module.tiller_service_account.name} --resource-namespace ${module.resource_namespace.name} --tiller-namespace ${module.tiller_namespace.name} --tls-private-key-algorithm ${var.private_key_algorithm} ${local.tls_algorithm_config} --tls-subject-json '${jsonencode(var.tls_subject)}' --client-tls-subject-json '${jsonencode(var.client_tls_subject)}' --helm-home ${local.helm_home_with_default} ${local.configure_args}"
+    command = "kubergrunt helm deploy ${local.kubectl_config_options} --service-account ${module.tiller_service_account.name} --resource-namespace ${module.resource_namespace.name} --tiller-namespace ${module.tiller_namespace.name} --tls-private-key-algorithm ${var.private_key_algorithm} ${local.tls_algorithm_config} --tls-subject-json '${jsonencode(var.tls_subject)}' --client-tls-subject-json '${jsonencode(var.client_tls_subject)}' --helm-home ${local.helm_home_with_default} ${local.configure_args} --tiller-version ${var.tiller_version}"
   }
 
   provisioner "local-exec" {

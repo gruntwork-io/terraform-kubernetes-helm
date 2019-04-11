@@ -30,6 +30,7 @@ func createExampleK8STillerTerraformOptions(
 	tillerServiceAccountName := fmt.Sprintf("%s-tiller-service-account", strings.ToLower(uniqueID))
 	encodedTestServiceAccount := fmt.Sprintf("%s/%s", testServiceAccountNamespace, testServiceAccountName)
 	terraformVars := map[string]interface{}{
+		"tiller_version":       "v2.12.2",
 		"tiller_namespace":     tillerNamespaceName,
 		"resource_namespace":   resourceNamespaceName,
 		"service_account_name": tillerServiceAccountName,
