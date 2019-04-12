@@ -129,7 +129,7 @@ These are specified through command line arguments. If everything is configured 
 the Tiller that was deployed with the following args:
 
 ```
-helm --tls --tls-verify --tiller-namespace NAMESPACE_OF_TILLER version
+helm version --tls --tls-verify --tiller-namespace NAMESPACE_OF_TILLER
 ```
 
 If you have access to Tiller, this should return you both the client version and the server version of Helm.
