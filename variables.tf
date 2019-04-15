@@ -46,6 +46,13 @@ variable "client_tls_subject" {
 # These variables have reasonable defaults,  but can be overridden.
 # ---------------------------------------------------------------------------------------------------------------------
 
+# Tiller configuration
+
+variable "tiller_version" {
+  description = "The version of Tiller to deploy."
+  default     = "v2.11.0"
+}
+
 # TLS algorithm configuration
 
 variable "private_key_algorithm" {
