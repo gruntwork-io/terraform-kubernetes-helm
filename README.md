@@ -39,15 +39,25 @@ This repo provides a Gruntwork IaC Package and has the following folder structur
   all the security best practices.
 * [modules](/modules): This folder contains the main implementation code for this Module, broken down into multiple
   standalone Submodules.
+
+  The primary module is:
+
+    * [k8s-tiller](/modules/k8s-tiller): Deploy Tiller with all the security features turned on. This includes using
+      `Secrets` for storing state and enabling TLS verification.
+
+    The deployed Tiller requires TLS certificate key pairs to operate. Additionally, clients will each need to their
+    own TLS certificate key pairs to authenticate to the deployed Tiller instance. This is based on [kubergrunt model of
+    deploying helm](https://github.com/gruntwork-io/kubergrunt/blob/master/HELM_GUIDE.md).
+
+    There are also several supporting modules that help with setting up the deployment:
+
+    * [k8s-namespace](/modules/k8s-namespace): Provision a Kubernetes `Namespace` with a default set of RBAC roles.
+    * [k8s-namespace-roles](/modules/k8s-namespace-roles): Provision a default set of RBAC roles to use in a `Namespace`.
+    * [k8s-service-account](/modules/k8s-service-account): Provision a Kubernetes `ServiceAccount`.
+
 * [examples](/examples): This folder contains examples of how to use the Submodules. The [example root
   README](/examples/README.md) provides a quickstart guide on how to use the Submodules in this Module.
 * [test](/test): Automated tests for the Submodules and examples.
-
-The following submodules are available in this module:
-
-- [k8s-namespace](/modules/k8s-namespace): Provision a Kubernetes `Namespace` with a default set of RBAC roles.
-- [k8s-namespace-roles](/modules/k8s-namespace-roles): Provision a default set of RBAC roles to use in a `Namespace`.
-- [k8s-service-account](/modules/k8s-service-account): Provision a Kubernetes `ServiceAccount`.
 
 
 ## What is Kubernetes?

@@ -204,16 +204,21 @@ to implementing the functionalities using pure Terraform providers. This approac
   `destroy`.
 
 That said, we decided to use this approach because of limitations in the existing providers to implement the
-functionalities here in pure Terraform code:
+functionalities here in pure Terraform code.
 
-- The Helm provider does not have [a resource that manages
-  Tiller](https://github.com/terraform-providers/terraform-provider-helm/issues/134).
+`kubergrunt` fulfills the role of generating and managing TLS certificate key pairs using Kubernetes `Secrets` as a
+database. This allows us to deploy Tiller with TLS verification enabled. We could instead use the `tls` and `kubernetes`
+providers in Terraform, but this has a few drawbacks:
+
 - The [TLS provider](https://www.terraform.io/docs/providers/tls/index.html) stores the certificate key pairs in plain
   text into the Terraform state.
 - The Kubernetes Secret resource in the provider [also stores the value in plain text in the Terraform
   state](https://www.terraform.io/docs/providers/kubernetes/r/secret.html).
 - The grant and configure workflows are better suited as CLI tools than in Terraform.
 
-Note that [we intend to implement a pure Terraform version of this when the Helm provider is
-updated](https://github.com/gruntwork-io/terraform-kubernetes-helm/issues/13), but we plan to continue to maintain the
+`kubergrunt` works around this by generating the TLS certs and storing them in Kubernetes `Secrets` directly. In this
+way, the generated TLS certs never leak into the Terraform state as they are referenced by name when deploying Tiller as
+opposed to by value.
+
+Note that we intend to implement a pure Terraform version of this functionality, but we plan to continue to maintain the
 `kubergrunt` approach for folks who are wary of leaking secrets into Terraform state.

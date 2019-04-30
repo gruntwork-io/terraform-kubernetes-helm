@@ -70,18 +70,6 @@ variable "private_key_rsa_bits" {
   default     = "2048"
 }
 
-# Undeploy options
-
-variable "force_undeploy" {
-  description = "If true, will remove the Tiller server resources even if there are releases deployed."
-  default     = false
-}
-
-variable "undeploy_releases" {
-  description = "If true, will delete deployed releases from the Tiller instance before undeploying Tiller."
-  default     = false
-}
-
 # Kubectl options
 
 variable "kubectl_config_context_name" {
@@ -95,6 +83,11 @@ variable "kubectl_config_path" {
 }
 
 # Helm client config options
+
+variable "configure_helm" {
+  description = "Whether or not to configure the local helm client to authenticate to the deployed Tiller instance."
+  default     = true
+}
 
 variable "helm_home" {
   description = "The path to the home directory for helm that you wish to use for this deployment."

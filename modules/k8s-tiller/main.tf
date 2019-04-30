@@ -15,6 +15,8 @@ resource "null_resource" "dependency_getter" {
 # Adapted from Tiller installer in helm client. See:
 # https://github.com/helm/helm/blob/master/cmd/helm/installer/install.go#L200
 resource "kubernetes_deployment" "tiller" {
+  depends_on = ["null_resource.dependency_getter"]
+
   metadata {
     namespace   = "${var.namespace}"
     name        = "${var.deployment_name}"
@@ -173,14 +175,14 @@ resource "kubernetes_deployment" "tiller" {
     # end spec
   }
 
-  depends_on = ["null_resource.dependency_getter"]
-
   # end deployment
 }
 
 # Adapted from Tiller installer in helm client. See:
 # https://github.com/helm/helm/blob/master/cmd/helm/installer/install.go#L332
 resource "kubernetes_service" "tiller" {
+  depends_on = ["null_resource.dependency_getter"]
+
   metadata {
     namespace   = "${var.namespace}"
     name        = "${var.service_name}"
@@ -211,8 +213,6 @@ resource "kubernetes_service" "tiller" {
       deployment = "${var.deployment_name}"
     }
   }
-
-  depends_on = ["null_resource.dependency_getter"]
 }
 
 # Global constants
