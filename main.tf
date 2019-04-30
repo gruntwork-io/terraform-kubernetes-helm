@@ -67,13 +67,47 @@ module "tiller_service_account" {
 # DEPLOY TILLER
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+resource "null_resource" "tiller_tls_ca_certs" {
+  provisioner "local-exec" {
+    command = "kubergrunt tls gen --ca --namespace kube-system --secret-name ${local.tls_ca_secret_name} --secret-label gruntwork.io/tiller-namespace=${var.tiller_namespace} --secret-label gruntwork.io/tiller-credentials=true --secret-label gruntwork.io/tiller-credentials-type=ca --tls-subject-json '${jsonencode(var.tls_subject)}' --tls-private-key-algorithm ${var.private_key_algorithm} ${local.tls_algorithm_config} ${local.kubectl_config_options}"
+  }
+}
+
+resource "null_resource" "tiller_tls_certs" {
+  provisioner "local-exec" {
+    command = "kubergrunt tls gen --namespace ${module.tiller_namespace.name} --ca-secret-name ${local.tls_ca_secret_name} --ca-namespace kube-system --secret-name ${local.tls_secret_name} --secret-label gruntwork.io/tiller-namespace=${var.tiller_namespace} --secret-label gruntwork.io/tiller-credentials=true --secret-label gruntwork.io/tiller-credentials-type=server --tls-subject-json '${jsonencode(var.tls_subject)}' --tls-private-key-algorithm ${var.private_key_algorithm} ${local.tls_algorithm_config} ${local.kubectl_config_options}"
+  }
+
+  depends_on = ["null_resource.tiller_tls_ca_certs"]
+}
+
+module "tiller" {
+  source = "./modules/k8s-tiller"
+
+  tiller_service_account_name              = "${module.tiller_service_account.name}"
+  tiller_service_account_token_secret_name = "${module.tiller_service_account.token_secret_name}"
+  tiller_tls_secret_name                   = "${local.tls_secret_name}"
+  namespace                                = "${module.tiller_namespace.name}"
+  tiller_image_version                     = "${var.tiller_version}"
+
+  # Kubergrunt will store the private key under tls.pem
+  tiller_tls_key_file_name = "tls.pem"
+
+  dependencies = [
+    "${null_resource.tiller_tls_ca_certs.id}",
+    "${null_resource.tiller_tls_certs.id}",
+  ]
+}
+
 locals {
   helm_home_with_default = "${var.helm_home == "" ? pathexpand("~/.helm") : var.helm_home}"
+
   kubectl_config_options = "${var.kubectl_config_context_name != "" ? "--kubectl-context-name ${var.kubectl_config_context_name}" : ""} ${var.kubectl_config_path != "" ? "--kubeconfig ${var.kubectl_config_path}" : ""}"
 
-  tls_algorithm_config = "${var.private_key_algorithm == "ECDSA" ? "--tls-private-key-ecdsa-curve ${var.private_key_ecdsa_curve}" : "--tls-private-key-rsa-bits ${var.private_key_rsa_bits}"}"
+  tls_ca_secret_name = "${var.tiller_namespace}-namespace-tiller-ca-certs"
+  tls_secret_name    = "tiller-certs"
 
-  undeploy_args = "${var.force_undeploy ? "--force" : ""} ${var.undeploy_releases ? "--undeploy-releases" : ""}"
+  tls_algorithm_config = "${var.private_key_algorithm == "ECDSA" ? "--tls-private-key-ecdsa-curve ${var.private_key_ecdsa_curve}" : "--tls-private-key-rsa-bits ${var.private_key_rsa_bits}"}"
 
   configure_args = "${
     var.helm_client_rbac_user != "" ? "--rbac-user ${var.helm_client_rbac_user}"
@@ -81,15 +115,4 @@ locals {
         : var.helm_client_rbac_service_account != "" ? "--rbac-service-account ${var.helm_client_rbac_service_account}"
           : ""
   }"
-}
-
-resource "null_resource" "tiller" {
-  provisioner "local-exec" {
-    command = "kubergrunt helm deploy ${local.kubectl_config_options} --service-account ${module.tiller_service_account.name} --resource-namespace ${module.resource_namespace.name} --tiller-namespace ${module.tiller_namespace.name} --tls-private-key-algorithm ${var.private_key_algorithm} ${local.tls_algorithm_config} --tls-subject-json '${jsonencode(var.tls_subject)}' --client-tls-subject-json '${jsonencode(var.client_tls_subject)}' --helm-home ${local.helm_home_with_default} ${local.configure_args} --tiller-version ${var.tiller_version}"
-  }
-
-  provisioner "local-exec" {
-    command = "kubergrunt helm undeploy ${local.kubectl_config_options} --helm-home ${local.helm_home_with_default} --tiller-namespace ${module.tiller_namespace.name} ${local.undeploy_args}"
-    when    = "destroy"
-  }
 }
