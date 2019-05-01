@@ -16,7 +16,7 @@ repository will be updated with migration instructions to help smooth out the up
 
 * See the [root README](/README.md) for instructions on using Terraform modules.
 * This module uses [the `kubernetes` provider](https://www.terraform.io/docs/providers/kubernetes/index.html).
-* See the [examples](/examples) folder for example usage.
+* See [the example at the root of the repo](/) for example usage.
 * See [variables.tf](./variables.tf) for all the variables you can set on this module.
 * See [outputs.tf](./outputs.tf) for all the variables that are outputed by this module.
 

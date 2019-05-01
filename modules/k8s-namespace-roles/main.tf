@@ -19,9 +19,9 @@ terraform {
 # resources backing the values in the dependencies list.
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "null_resource" "dependency_getter" {
-  provisioner "local-exec" {
-    command = "echo ${length(var.dependencies)}"
+resource "null_resource" "wait_for" {
+  triggers = {
+    instance = "${join(" ", var.wait_for)}"
   }
 }
 

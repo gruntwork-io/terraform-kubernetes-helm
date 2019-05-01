@@ -97,14 +97,16 @@ module "tiller" {
   namespace                                = "${module.tiller_namespace.name}"
   tiller_image_version                     = "${var.tiller_version}"
 
-  # Kubergrunt will store the private key under tls.pem
+  # Kubergrunt will store the private key under the key "tls.pem" in the corresponding Secret resource, which will be
+  # accessed as a file when mounted into the container.
   tiller_tls_key_file_name = "tls.pem"
 
-  dependencies = ["${null_resource.tiller_tls_certs.id}"]
+  wait_for = ["${null_resource.tiller_tls_certs.id}"]
 }
 
-# We use kubergrunt to wait for Tiller to be deployed. Any resources that depend on this can assume Tiller is
-# successfully deployed and up at that point.
+# The Deployment resources created in the module call to `k8s-tiller` will be complete creation before the rollout is
+# complete. We use kubergrunt here to wait for the deployment to complete, so that when this resource is done creating,
+# any resources that depend on this can assume Tiller is successfully deployed and up at that point.
 resource "null_resource" "wait_for_tiller" {
   provisioner "local-exec" {
     command = "kubergrunt helm wait-for-tiller --tiller-namespace ${module.tiller_namespace.name} --tiller-deployment-name ${module.tiller.deployment_name} --expected-tiller-version ${var.tiller_version}"
