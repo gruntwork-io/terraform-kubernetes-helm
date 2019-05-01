@@ -44,8 +44,6 @@ func createExampleK8STillerTerraformOptions(
 		},
 		"helm_client_rbac_service_account": encodedTestServiceAccount,
 		"helm_home":                        helmHome,
-		"force_undeploy":                   true,
-		"undeploy_release":                 true,
 	}
 	terratestOptions := terraform.Options{
 		TerraformDir: templatePath,
