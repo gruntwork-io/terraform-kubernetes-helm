@@ -16,13 +16,29 @@ variable "service_account_name" {
 }
 
 variable "tls_subject" {
-  description = "The issuer information that contains the identifying information for the Tiller server. Used to generate the TLS certificate keypairs. See https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for a list of expected keys."
+  description = "The issuer information that contains the identifying information for the Tiller server. Used to generate the TLS certificate keypairs."
   type        = "map"
+
+  # Expects the following keys
+  # - common_name
+  # - org
+  # - org_unit
+  # - city
+  # - state
+  # - country
 }
 
 variable "client_tls_subject" {
-  description = "The issuer information that contains the identifying information for the helm client of the operator. Used to generate the TLS certificate keypairs. See https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for a list of expected keys."
+  description = "The issuer information that contains the identifying information for the helm client of the operator. Used to generate the TLS certificate keypairs."
   type        = "map"
+
+  # Expects the following keys
+  # - common_name
+  # - org
+  # - org_unit
+  # - city
+  # - state
+  # - country
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -68,17 +84,27 @@ variable "kubectl_config_path" {
 
 # Helm client config options
 
-variable "grant_helm_client_rbac_user" {
-  description = "If set, will generate client side TLS certs for this RBAC user."
+variable "configure_helm" {
+  description = "Whether or not to configure the local helm client to authenticate to the deployed Tiller instance."
+  default     = true
+}
+
+variable "helm_home" {
+  description = "The path to the home directory for helm that you wish to use for this deployment."
   default     = ""
 }
 
-variable "grant_helm_client_rbac_group" {
-  description = "If set, will generate client side TLS certs for this RBAC group."
+variable "helm_client_rbac_user" {
+  description = "If set, will setup the local helm client to authenticate using this RBAC user."
   default     = ""
 }
 
-variable "grant_helm_client_rbac_service_account" {
-  description = "If set, will generate client side TLS certs for this ServiceAccount. The ServiceAccount should be encoded as NAMESPACE/NAME."
+variable "helm_client_rbac_group" {
+  description = "If set, will setup the local helm client to authenticate using this RBAC group."
+  default     = ""
+}
+
+variable "helm_client_rbac_service_account" {
+  description = "If set, will setup the local helm client to authenticate using this ServiceAccount. The ServiceAccount should be encoded as NAMESPACE/NAME."
   default     = ""
 }

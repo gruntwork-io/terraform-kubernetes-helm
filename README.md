@@ -20,7 +20,7 @@ The general idea is to:
 1. Setup a `kubectl` config context that is configured to authenticate to the deployed cluster.
 1. Install the necessary prerequisites tools:
     - [`helm` client](https://docs.helm.sh/using_helm/#install-helm)
-    - [`kubergrunt`](https://github.com/gruntwork-io/kubergrunt#installation)
+    - (Optional) [`kubergrunt`](https://github.com/gruntwork-io/kubergrunt#installation)
 1. Provision a [`Namespace`](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) and
    [`ServiceAccount`](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/) to house the
    Tiller instance.
@@ -54,6 +54,16 @@ This repo provides a Gruntwork IaC Package and has the following folder structur
     * [k8s-namespace](/modules/k8s-namespace): Provision a Kubernetes `Namespace` with a default set of RBAC roles.
     * [k8s-namespace-roles](/modules/k8s-namespace-roles): Provision a default set of RBAC roles to use in a `Namespace`.
     * [k8s-service-account](/modules/k8s-service-account): Provision a Kubernetes `ServiceAccount`.
+    * [k8s-tiller-tls-certs](/modules/k8s-tiller-tls-certs): Generate a TLS Certificate Authority (CA) and using that,
+      generate signed TLS certificate key pairs that can be used for TLS verification of Tiller. The certs are managed
+      on the cluster using Kubernetes `Secrets`. **NOTE**: This module uses the `tls` provider, which means the
+      generated certificate key pairs are stored in plain text in the Terraform state file. If you are sensitive to
+      secrets in Terraform state, consider using `kubergrunt` for TLS management.
+    * [k8s-helm-client-tls-certs](/modules/k8s-helm-client-tls-certs): Generate a signed TLS certificate key pair from a
+      previously generated CA certificate key pair. This TLS key pair can be used to authenticate a helm client to
+      access a deployed Tiller instance. **NOTE**: This module uses the `tls` provider, which means the generated
+      certificate key pairs are stored in plain text in the Terraform state file. If you are sensitive to secrets in
+      Terraform state, consider using `kubergrunt` for TLS management.
 
 * [examples](/examples): This folder contains examples of how to use the Submodules. The [example root
   README](/examples/README.md) provides a quickstart guide on how to use the Submodules in this Module.
