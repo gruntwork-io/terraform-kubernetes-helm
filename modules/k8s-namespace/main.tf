@@ -37,7 +37,7 @@ resource "kubernetes_namespace" "namespace" {
     annotations = "${var.annotations}"
   }
 
-  depends_on = ["null_resource.dependency_getter"]
+  depends_on = ["null_resource.wait_for"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

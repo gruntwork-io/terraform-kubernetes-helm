@@ -42,7 +42,7 @@ resource "kubernetes_service_account" "service_account" {
   secret                          = "${var.secrets_for_pods}"
   automount_service_account_token = "${var.automount_service_account_token}"
 
-  depends_on = ["null_resource.dependency_getter"]
+  depends_on = ["null_resource.wait_for"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -72,5 +72,5 @@ resource "kubernetes_role_binding" "service_account_role_binding" {
     namespace = "${var.namespace}"
   }
 
-  depends_on = ["null_resource.dependency_getter"]
+  depends_on = ["null_resource.wait_for"]
 }

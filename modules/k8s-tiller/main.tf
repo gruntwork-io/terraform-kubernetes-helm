@@ -36,7 +36,7 @@ resource "null_resource" "wait_for" {
 # Adapted from Tiller installer in helm client. See:
 # https://github.com/helm/helm/blob/master/cmd/helm/installer/install.go#L200
 resource "kubernetes_deployment" "tiller" {
-  depends_on = ["null_resource.dependency_getter"]
+  depends_on = ["null_resource.wait_for"]
 
   metadata {
     namespace   = "${var.namespace}"
@@ -210,7 +210,7 @@ resource "kubernetes_deployment" "tiller" {
 # Adapted from Tiller installer in helm client. See:
 # https://github.com/helm/helm/blob/master/cmd/helm/installer/install.go#L332
 resource "kubernetes_service" "tiller" {
-  depends_on = ["null_resource.dependency_getter"]
+  depends_on = ["null_resource.wait_for"]
 
   metadata {
     namespace   = "${var.namespace}"
