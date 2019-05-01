@@ -8,7 +8,7 @@ Unlike the defaults installed by the helm client, the deployed Tiller instances:
 - Enable TLS verification and authentication.
 - Only listens on localhost within the container.
 
-Note: Please be advised that there are plans by the community to deprecate and remove Tiller starting Helm v3. This
+Note: Please be advised that there are plans by the Helm community to deprecate and remove Tiller starting Helm v3. This
 repository will be updated with migration instructions to help smooth out the upgrade when Helm v3 lands.
 
 
