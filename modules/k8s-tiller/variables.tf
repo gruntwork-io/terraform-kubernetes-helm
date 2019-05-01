@@ -1,80 +1,101 @@
-variable "tiller_service_account_name" {}
+# ---------------------------------------------------------------------------------------------------------------------
+# MODULE PARAMETERS
+# These variables are expected to be passed in by the operator when calling this terraform module.
+# ---------------------------------------------------------------------------------------------------------------------
 
-variable "tiller_service_account_token_secret_name" {}
+variable "namespace" {
+  description = "The name of the Kubernetes Namespace where Tiller should be deployed into."
+}
 
-variable "tiller_tls_secret_name" {}
+variable "tiller_service_account_name" {
+  description = "The name of the Kubernetes ServiceAccount that Tiller should use when authenticating to the Kubernetes API."
+}
 
-variable "namespace" {}
+variable "tiller_service_account_token_secret_name" {
+  description = "The name of the Kubernetes Secret that holds the ServiceAccount token."
+}
+
+variable "tiller_tls_secret_name" {
+  description = "The name of the Kubernetes Secret that holds the TLS certificate key pair to use for Tiller. Needs to provide the TLS private key, public certificate, and CA certificate to use for verifying client TLS certificate key pairs."
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# OPTIONAL MODULE PARAMETERS
+# These variables have defaults, but may be overridden by the operator.
+# ---------------------------------------------------------------------------------------------------------------------
 
 variable "deployment_name" {
-  default = "tiller-deploy"
+  description = "The name to use for the Kubernetes Deployment resource. This should be unique to the Namespace if you plan on having multiple Tiller Deployments in a single Namespace."
+  default     = "tiller-deploy"
 }
 
 variable "deployment_labels" {
-  type    = "map"
-  default = {}
+  description = "Any labels to attach to the Kubernetes Deployment resource."
+  type        = "map"
+  default     = {}
 }
 
 variable "deployment_annotations" {
-  type    = "map"
-  default = {}
+  description = "Any annotations to attach to the Kubernetes Deployment resource."
+  type        = "map"
+  default     = {}
 }
 
 variable "deployment_replicas" {
-  default = 1
+  description = "The number of Pods to use for Tiller. 1 should be sufficient for most use cases."
+  default     = 1
 }
 
 variable "service_name" {
-  default = "tiller-deploy"
+  description = "The name to use for the Kubernetes Service resource. This should be unique to the Namespace if you plan on having multiple Tiller Deployments in a single Namespace."
+  default     = "tiller-deploy"
 }
 
 variable "service_labels" {
-  type    = "map"
-  default = {}
+  description = "Any labels to attach to the Kubernetes Service resource."
+  type        = "map"
+  default     = {}
 }
 
 variable "service_annotations" {
-  type    = "map"
-  default = {}
+  description = "Any annotations to attach to the Kubernetes Service resource."
+  type        = "map"
+  default     = {}
 }
 
 variable "tiller_tls_key_file_name" {
-  default = "tls.key"
+  description = "The file name of the private key file for the server's TLS certificate key pair, as it is available in the Kubernetes Secret for the TLS certificates."
+  default     = "tls.key"
 }
 
 variable "tiller_tls_cert_file_name" {
-  default = "tls.crt"
+  description = "The file name of the public certificate file for the server's TLS certificate key pair, as it is available in the Kubernetes Secret for the TLS certificates."
+  default     = "tls.crt"
 }
 
 variable "tiller_tls_cacert_file_name" {
-  default = "ca.crt"
+  description = "The file name of the CA certificate file that can be used to validate client side TLS certificates, as it is available in the Kubernetes Secret for the TLS certificates."
+  default     = "ca.crt"
 }
 
 variable "tiller_image" {
-  default = "gcr.io/kubernetes-helm/tiller"
+  description = "The container image to use for the Tiller Pods."
+  default     = "gcr.io/kubernetes-helm/tiller"
 }
 
 variable "tiller_image_version" {
-  default = "v2.11.0"
+  description = "The version of the container image to use for the Tiller Pods."
+  default     = "v2.11.0"
 }
 
 variable "tiller_image_pull_policy" {
-  default = "IfNotPresent"
-}
-
-variable "tiller_command_args" {
-  default = [
-    # Use Secrets for storing release info, which contain the values.yaml file info.
-    "--storage=secret",
-
-    # Set to only listen on localhost so that it is only available via port-forwarding. The helm client (and terraform
-    # helm provider) use port-forwarding to communicate with Tiller so this is a safer default.
-    "--listen=localhost:44134",
-  ]
+  description = "Policy for pulling the container image used for the Tiller Pods. Use `Always` if the image tag is mutable (e.g latest)"
+  default     = "IfNotPresent"
 }
 
 variable "tiller_history_max" {
-  default = 0
+  description = "The maximum number of revisions saved per release. Use 0 for no limit."
+  default     = 0
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

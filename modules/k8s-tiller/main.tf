@@ -1,3 +1,20 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# CREATE DEPLOYMENT AND SERVICE RESOURCES FOR MANAGING TILLER
+# These templates provision a new Kubernetes deployment that manages the Tiller Pods with all the security features
+# turned on. This includes:
+# - TLS verification and authentication
+# - Using Secrets to store the release info.
+# - Only listening on localhost within the container.
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ---------------------------------------------------------------------------------------------------------------------
+# SET TERRAFORM REQUIREMENTS FOR RUNNING THIS MODULE
+# ---------------------------------------------------------------------------------------------------------------------
+
+terraform {
+  required_version = "~> 0.9"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # SET MODULE DEPENDENCY RESOURCE
 # This works around a terraform limitation where we can not specify module dependencies natively.
@@ -11,6 +28,10 @@ resource "null_resource" "dependency_getter" {
     command = "echo ${length(var.dependencies)}"
   }
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# CREATE THE DEPLOYMENT RESOURCE
+# ---------------------------------------------------------------------------------------------------------------------
 
 # Adapted from Tiller installer in helm client. See:
 # https://github.com/helm/helm/blob/master/cmd/helm/installer/install.go#L200
@@ -63,14 +84,18 @@ resource "kubernetes_deployment" "tiller" {
           command           = ["/tiller"]
 
           args = [
-            "${concat(
-                "${var.tiller_command_args}",
-                list(
-                  "--tls-key=${local.tls_certs_mount_path}/${var.tiller_tls_key_file_name}",
-                  "--tls-cert=${local.tls_certs_mount_path}/${var.tiller_tls_cert_file_name}",
-                  "--tls-ca-cert=${local.tls_certs_mount_path}/${var.tiller_tls_cacert_file_name}",
-                ),
-            )}",
+            # Use Secrets for storing release info, which contain the values.yaml file info.
+            "--storage=secret",
+
+            # Set to only listen on localhost so that it is only available via port-forwarding. The helm client (and terraform
+            # helm provider) use port-forwarding to communicate with Tiller so this is a safer default.
+            "--listen=localhost:44134",
+
+            # Since the Secret for the TLS certs aren't created by helm init, allow user to override the file names.
+            "--tls-key=${local.tls_certs_mount_path}/${var.tiller_tls_key_file_name}",
+
+            "--tls-cert=${local.tls_certs_mount_path}/${var.tiller_tls_cert_file_name}",
+            "--tls-ca-cert=${local.tls_certs_mount_path}/${var.tiller_tls_cacert_file_name}",
           ]
 
           env {
@@ -178,6 +203,10 @@ resource "kubernetes_deployment" "tiller" {
   # end deployment
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# CREATE THE SERVICE RESOURCE TO FRONT THE DEPLOYMENT
+# ---------------------------------------------------------------------------------------------------------------------
+
 # Adapted from Tiller installer in helm client. See:
 # https://github.com/helm/helm/blob/master/cmd/helm/installer/install.go#L332
 resource "kubernetes_service" "tiller" {
@@ -215,7 +244,11 @@ resource "kubernetes_service" "tiller" {
   }
 }
 
-# Global constants
+# ---------------------------------------------------------------------------------------------------------------------
+# GLOBAL CONSTANTS
+# Avoids the usage of magic strings.
+# ---------------------------------------------------------------------------------------------------------------------
+
 locals {
   service_account_token_mount_path = "/var/run/secrets/kubernetes.io/serviceaccount"
   tls_certs_mount_path             = "/etc/certs"

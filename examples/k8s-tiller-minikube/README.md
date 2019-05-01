@@ -44,8 +44,8 @@ respective repositories for how to deploy Tiller on those platforms. <!-- TODO: 
 
 ## Installing necessary tools
 
-In addition to `terraform`, this guide uses `kubergrunt` to manage the deployment of Tiller. You can read more about the
-decision behind this approach in [the Appendix](#appendix-a-why-kubergrunt) of this guide.
+In addition to `terraform`, this guide uses `kubergrunt` to manage TLS certificates for the deployment of Tiller. You
+can read more about the decision behind this approach in [the Appendix](#appendix-a-why-kubergrunt) of this guide.
 
 This means that your system needs to be configured to be able to find `terraform`, `kubergrunt`, and `helm` client
 utilities on the system `PATH`. Here are the installation guide for each:
@@ -76,7 +76,7 @@ Tiller! To deploy Tiller, we will use the example Terraform code at the root of 
     - `terraform apply`
     - Fill in the required variables based on your needs. <!-- TODO: show example inputs here -->
 
-The Terraform code creates a few resources before deploying Tiller using `kubergrunt`:
+The Terraform code creates a few resources before deploying Tiller:
 
 - A Kubernetes `Namespace` (the `tiller-namespace`) to house the Tiller instance. This namespace is where all the
   Kubernetes resources that Tiller needs to function will live. In production, you will want to lock down access to this
@@ -89,32 +89,27 @@ The Terraform code creates a few resources before deploying Tiller using `kuberg
   `tiller-namespace` and the `resource-namespace`, so that it can:
     - Manage its own resources in the `tiller-namespace`, where the Tiller metadata (e.g release tracking information) will live.
     - Manage the resources deployed by helm charts in the `resource-namespace`.
+- Using `kubergrunt`, generate a TLS CA certificate key pair and a set of signed certificate key pairs for the server
+  and the client. These will then be uploaded as `Secrets` on the Kubernetes cluster.
 
-Then it will feed the names of the created resources into the `kubergrunt helm deploy` command. As part of the
-deployment, `kubergrunt` will:
+These resources are then passed into the `k8s-tiller` module where the Tiller `Deployment` resources will be created.
+Once the resources are applied to the cluster, this will wait for the Tiller `Deployment` to roll out the `Pods` using
+`kubergrunt helm wait-for-tiller`.
 
-- Create a new TLS certificate key pair to use as the CA and upload it to Kubernetes as a `Secret` in the `kube-system`
-  namespace.
-- Using the generated CA TLS certificate key pair, create a signed TLS certificate key pair to use to identify the
-  Tiller server and upload it to Kubernetes as a `Secret` in the `tiller-namespace`.
-- Deploy Tiller with the following configurations turned on:
-    - TLS verification
-    - `Secrets` as the storage engine
-    - Provisioned in the `tiller-namespace` with the service account as the `tiller-service-account`
+Finally, to allow you to use `helm` right away, this code also sets up the local `helm` client. This involves:
 
-- Grant access to the provided RBAC entity and configure the local helm client to use those credentials:
-    - Using the CA TLS certificate key pair, create a signed TLS certificate key pair to use to identify the client.
-    - Upload the certificate key pair to the `tiller-namespace`.
-    - Grant the RBAC entity access to:
-        - Get the client certificate `Secret` (`kubergrunt helm configure` uses this to install the client certificate
-          key pair locally)
-        - Get and List pods in `tiller-namespace` (the `helm` client uses this to find the Tiller pod)
-        - Create a port forward to the Tiller pod (the `helm` client uses this to make requests to the Tiller pod)
+- Using the CA TLS certificate key pair, create a signed TLS certificate key pair to use to identify the client.
+- Upload the certificate key pair to the `tiller-namespace`.
+- Grant the RBAC entity access to:
+    - Get the client certificate `Secret` (`kubergrunt helm configure` uses this to install the client certificate
+      key pair locally)
+    - Get and List pods in `tiller-namespace` (the `helm` client uses this to find the Tiller pod)
+    - Create a port forward to the Tiller pod (the `helm` client uses this to make requests to the Tiller pod)
 
-    - Install the client certificate key pair to the helm home directory so the client can use it.
+- Install the client certificate key pair to the helm home directory so the client can use it.
 
-You should now have a working Tiller deployment with your helm client configured to access it.
-So let's verify that in the next step!
+At the end of the `apply`, you should now have a working Tiller deployment with your `helm` client configured to access
+it. So let's verify that in the next step!
 
 
 ## Verify Tiller Deployment
@@ -175,20 +170,6 @@ kubergrunt helm configure --tiller-namespace NAMESPACE_OF_TILLER --rbac-group de
 ```
 
 At the end of this, your users should have the same helm client setup as above.
-
-
-## Upgrading Deployed Tiller
-
-At some point in the lifetime of the Tiller deployment, you will want to upgrade it. You can upgrade the deployed Tiller
-instance using the helm client with the following command:
-
-```
-helm init --upgrade --tiller-namespace TILLER_NAMESPACE
-```
-
-**Note**: You need to be an administrator to run this command. Specifically, this should be done with the same `kubectl`
-context as the one used to deploy Tiller. You can use the `--kube-context` option to use a different context from the
-default.
 
 
 ## Appendix A: Why kubergrunt?
