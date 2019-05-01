@@ -23,7 +23,7 @@ module "tiller_namespace" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
   # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.3.0"
-  source = "./modules/k8s-namespace"
+  source = "../../modules/k8s-namespace"
 
   name = "${var.tiller_namespace}"
 }
@@ -32,7 +32,7 @@ module "resource_namespace" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
   # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.3.0"
-  source = "./modules/k8s-namespace"
+  source = "../../modules/k8s-namespace"
 
   name = "${var.resource_namespace}"
 }
@@ -41,7 +41,7 @@ module "tiller_service_account" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
   # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-service-account?ref=v0.3.0"
-  source = "./modules/k8s-service-account"
+  source = "../../modules/k8s-service-account"
 
   name           = "${var.service_account_name}"
   namespace      = "${module.tiller_namespace.name}"
@@ -89,7 +89,7 @@ module "tiller" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
   # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-tiller?ref=v0.3.0"
-  source = "./modules/k8s-tiller"
+  source = "../../modules/k8s-tiller"
 
   tiller_service_account_name              = "${module.tiller_service_account.name}"
   tiller_service_account_token_secret_name = "${module.tiller_service_account.token_secret_name}"
