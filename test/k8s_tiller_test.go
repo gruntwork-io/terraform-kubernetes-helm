@@ -29,6 +29,7 @@ func TestK8STiller(t *testing.T) {
 	workingDir := filepath.Join(".", "stages", t.Name())
 
 	test_structure.RunTestStage(t, "create_test_copy_of_examples", func() {
+		uniqueID := random.UniqueId()
 		k8sTillerTerraformModulePath := test_structure.CopyTerraformFolderToTemp(t, "..", ".")
 		logger.Logf(t, "path to test folder %s\n", k8sTillerTerraformModulePath)
 		helmHome := filepath.Join(k8sTillerTerraformModulePath, ".helm")
@@ -37,6 +38,7 @@ func TestK8STiller(t *testing.T) {
 
 		test_structure.SaveString(t, workingDir, "k8sTillerTerraformModulePath", k8sTillerTerraformModulePath)
 		test_structure.SaveString(t, workingDir, "helmHome", helmHome)
+		test_structure.SaveString(t, workingDir, "uniqueID", uniqueID)
 	})
 
 	test_structure.RunTestStage(t, "create_terratest_options", func() {
