@@ -1,8 +1,8 @@
 # Kubernetes Tiller Deployment On Minikube
 
-The root folder of this repo shows an example of how to use Terraform to call out to our `kubergrunt` utility to deploy
-Tiller (the server component of Helm) onto a Kubernetes cluster. Here we will walk through a detailed guide on how you
-can setup `minikube` and use this module to deploy Tiller onto it.
+This folder shows an example of how to use Terraform to call out to our `kubergrunt` utility to deploy Tiller (the
+server component of Helm) onto a Kubernetes cluster. Here we will walk through a detailed guide on how you can setup
+`minikube` and use this module to deploy Tiller onto it.
 
 
 ## Background
@@ -64,12 +64,12 @@ Windows.
 ## Apply the Terraform Code
 
 Now that we have a working Kubernetes cluster, and all the prerequisite tools are installed, we are ready to deploy
-Tiller! To deploy Tiller, we will use the example Terraform code at the root of this repo:
+Tiller! To deploy Tiller, we will use the example Terraform code in this folder:
 
 1. If you haven't already, clone this repo:
     - `git clone https://github.com/gruntwork-io/terraform-kubernetes-helm.git`
-1. Make sure you are at the root of this repo:
-    - `cd terraform-kubernetes-helm`
+1. Make sure you are in the example folder:
+    - `cd terraform-kubernetes-helm/examples/8s-tiller-kubergrunt-minikube`
 1. Initialize terraform:
     - `terraform init`
 1. Apply the terraform code:
