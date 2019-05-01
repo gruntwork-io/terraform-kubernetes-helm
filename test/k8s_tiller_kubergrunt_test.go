@@ -31,7 +31,7 @@ func TestK8STillerKubergrunt(t *testing.T) {
 	workingDir := filepath.Join(".", "stages", t.Name())
 
 	test_structure.RunTestStage(t, "create_test_copy_of_examples", func() {
-		k8sTillerTerraformModulePath := test_structure.CopyTerraformFolderToTemp(t, "..", "examples/k8s-namespace-with-service-account")
+		k8sTillerTerraformModulePath := test_structure.CopyTerraformFolderToTemp(t, "..", "examples/k8s-tiller-kubergrunt-minikube")
 		logger.Logf(t, "path to test folder %s\n", k8sTillerTerraformModulePath)
 		helmHome := filepath.Join(k8sTillerTerraformModulePath, ".helm")
 		// make sure to create the helm home directory
