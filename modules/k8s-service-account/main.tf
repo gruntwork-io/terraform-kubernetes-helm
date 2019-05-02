@@ -21,8 +21,8 @@ terraform {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "null_resource" "dependency_getter" {
-  provisioner "local-exec" {
-    command = "echo ${length(var.dependencies)}"
+  triggers = {
+    instance = "${join(",", var.dependencies)}"
   }
 }
 
