@@ -19,9 +19,9 @@ terraform {
 # resources backing the values in the dependencies list.
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "null_resource" "wait_for" {
+resource "null_resource" "dependency_getter" {
   triggers = {
-    instance = "${join(" ", var.wait_for)}"
+    instance = "${join(",", var.dependencies)}"
   }
 }
 
@@ -50,7 +50,7 @@ resource "kubernetes_role" "rbac_role_access_all" {
     verbs      = ["*"]
   }
 
-  depends_on = ["null_resource.wait_for"]
+  depends_on = ["null_resource.dependency_getter"]
 }
 
 resource "kubernetes_role" "rbac_role_access_read_only" {
@@ -67,7 +67,7 @@ resource "kubernetes_role" "rbac_role_access_read_only" {
     verbs      = ["get", "list", "watch"]
   }
 
-  depends_on = ["null_resource.wait_for"]
+  depends_on = ["null_resource.dependency_getter"]
 }
 
 # These RBAC role permissions are based on the official example regarding deploying Tiller in a namespace to manage
@@ -88,7 +88,7 @@ resource "kubernetes_role" "rbac_tiller_metadata_access" {
     verbs      = ["*"]
   }
 
-  depends_on = ["null_resource.wait_for"]
+  depends_on = ["null_resource.dependency_getter"]
 }
 
 resource "kubernetes_role" "rbac_tiller_resource_access" {
@@ -122,5 +122,5 @@ resource "kubernetes_role" "rbac_tiller_resource_access" {
     verbs     = ["*"]
   }
 
-  depends_on = ["null_resource.wait_for"]
+  depends_on = ["null_resource.dependency_getter"]
 }

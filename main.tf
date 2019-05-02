@@ -101,7 +101,7 @@ module "tiller" {
   # accessed as a file when mounted into the container.
   tiller_tls_key_file_name = "tls.pem"
 
-  wait_for = ["${null_resource.tiller_tls_certs.id}"]
+  dependencies = ["${null_resource.tiller_tls_certs.id}"]
 }
 
 # The Deployment resources created in the module call to `k8s-tiller` will be complete creation before the rollout is

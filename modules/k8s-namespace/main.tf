@@ -20,9 +20,9 @@ terraform {
 # resources backing the values in the dependencies list.
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "null_resource" "wait_for" {
+resource "null_resource" "dependency_getter" {
   triggers = {
-    instance = "${join(" ", var.wait_for)}"
+    instance = "${join(",", var.dependencies)}"
   }
 }
 
@@ -37,7 +37,7 @@ resource "kubernetes_namespace" "namespace" {
     annotations = "${var.annotations}"
   }
 
-  depends_on = ["null_resource.wait_for"]
+  depends_on = ["null_resource.dependency_getter"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -48,8 +48,8 @@ resource "kubernetes_namespace" "namespace" {
 module "namespace_roles" {
   source = "../k8s-namespace-roles"
 
-  namespace   = "${kubernetes_namespace.namespace.id}"
-  labels      = "${var.labels}"
-  annotations = "${var.annotations}"
-  wait_for    = ["${var.wait_for}"]
+  namespace    = "${kubernetes_namespace.namespace.id}"
+  labels       = "${var.labels}"
+  annotations  = "${var.annotations}"
+  dependencies = ["${var.dependencies}"]
 }

@@ -20,9 +20,9 @@ terraform {
 # resources backing the values in the dependencies list.
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "null_resource" "wait_for" {
+resource "null_resource" "dependency_getter" {
   triggers = {
-    instance = "${join(" ", var.wait_for)}"
+    instance = "${join(",", var.dependencies)}"
   }
 }
 
@@ -42,7 +42,7 @@ resource "kubernetes_service_account" "service_account" {
   secret                          = "${var.secrets_for_pods}"
   automount_service_account_token = "${var.automount_service_account_token}"
 
-  depends_on = ["null_resource.wait_for"]
+  depends_on = ["null_resource.dependency_getter"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -72,5 +72,5 @@ resource "kubernetes_role_binding" "service_account_role_binding" {
     namespace = "${var.namespace}"
   }
 
-  depends_on = ["null_resource.wait_for"]
+  depends_on = ["null_resource.dependency_getter"]
 }

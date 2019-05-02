@@ -33,10 +33,10 @@ variable "annotations" {
 # additional Roles in the system. Therefore, you need to first create a ClusterRoleBinding to promote your account
 # before you can apply this module. In this use case, you can pass in the ClusterRoleBinding as a dependency into this
 # module:
-# wait_for = ["${kubernetes_cluster_role_binding.user.metadata.0.name}"]
+# dependencies = ["${kubernetes_cluster_role_binding.user.metadata.0.name}"]
 # ---------------------------------------------------------------------------------------------------------------------
 
-variable "wait_for" {
+variable "dependencies" {
   description = "Create a dependency between the resources in this module to the interpolated values in this list (and thus the source resources). In other words, the resources in this module will now depend on the resources backing the values in this list such that those resources need to be created before the resources in this module, and the resources in this module need to be destroyed before the resources in the list."
   type        = "list"
   default     = []
