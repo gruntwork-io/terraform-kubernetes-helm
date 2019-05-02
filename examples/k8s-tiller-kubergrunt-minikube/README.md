@@ -1,8 +1,8 @@
-# Kubernetes Tiller Deployment On Minikube
+# Kubernetes Tiller Deployment With Kubergrunt On Minikube
 
-This folder shows an example of how to use Terraform to call out to our `kubergrunt` utility to deploy Tiller (the
-server component of Helm) onto a Kubernetes cluster. Here we will walk through a detailed guide on how you can setup
-`minikube` and use this module to deploy Tiller onto it.
+This folder shows an example of how to use Terraform to call out to our `kubergrunt` utility for TLS management when
+deploying Tiller (the server component of Helm) onto a Kubernetes cluster. Here we will walk through a detailed guide on
+how you can setup `minikube` and use the modules in this repo to deploy Tiller onto it.
 
 
 ## Background
