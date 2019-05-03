@@ -138,7 +138,7 @@ jobs:
           name: run integration tests
           command: |
             mkdir -p /tmp/logs
-            run-go-tests --path test --timeout 60m --packages "-run TestK8STillerNoKubergrunt$  ./test" | tee /tmp/logs/all.log
+            run-go-tests --path test --timeout 60m --packages "-run TestK8STillerNoKubergrunt$ ." | tee /tmp/logs/all.log
           no_output_timeout: 3600s
 
       - run:
