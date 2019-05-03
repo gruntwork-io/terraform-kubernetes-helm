@@ -92,7 +92,12 @@ module "tiller" {
 # successfully deployed and up at that point.
 resource "null_resource" "wait_for_tiller" {
   provisioner "local-exec" {
-    command = "kubergrunt helm wait-for-tiller --tiller-namespace ${module.tiller_namespace.name} --tiller-deployment-name ${module.tiller.deployment_name} --expected-tiller-version ${var.tiller_version}"
+    command = <<-EOF
+    ${lookup(module.require_executables.executables, "kubergrunt")} helm wait-for-tiller ${local.esc_newl}
+      --tiller-namespace ${module.tiller_namespace.name} ${local.esc_newl}
+      --tiller-deployment-name ${module.tiller.deployment_name} ${local.esc_newl}
+      --expected-tiller-version ${var.tiller_version}
+    EOF
   }
 }
 
@@ -100,18 +105,26 @@ resource "null_resource" "wait_for_tiller" {
 # CONFIGURE OPERATOR HELM CLIENT
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-resource "null_resource" "grant_and_configure_helm" {
-  count = "${var.configure_helm}"
+resource "null_resource" "grant_helm_access" {
+  count      = "${var.configure_helm}"
+  depends_on = ["null_resource.wait_for_tiller"]
 
   provisioner "local-exec" {
     command = <<-EOF
-    kubergrunt helm grant --tiller-namespace ${module.tiller_namespace.name} ${local.kubectl_config_options} --tls-subject-json '${jsonencode(var.client_tls_subject)}' ${local.configure_args}
+    ${lookup(module.require_executables.executables, "kubergrunt")} helm grant ${local.esc_newl}
+      --tiller-namespace ${module.tiller_namespace.name} ${local.esc_newl}
+      ${local.kubectl_config_options} ${local.esc_newl}
+      --tls-subject-json '${jsonencode(var.client_tls_subject)}' ${local.esc_newl}
+      ${local.configure_args}
 
-    kubergrunt helm configure --helm-home ${local.helm_home_with_default} --tiller-namespace ${module.tiller_namespace.name} --resource-namespace ${module.resource_namespace.name} ${local.kubectl_config_options} ${local.configure_args}
+    ${lookup(module.require_executables.executables, "kubergrunt")} helm configure ${local.esc_newl}
+      --helm-home ${local.helm_home_with_default} ${local.esc_newl}
+      --tiller-namespace ${module.tiller_namespace.name} ${local.esc_newl}
+      --resource-namespace ${module.resource_namespace.name} ${local.esc_newl}
+      ${local.kubectl_config_options} ${local.esc_newl}
+      ${local.configure_args}
     EOF
   }
-
-  depends_on = ["null_resource.wait_for_tiller"]
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -130,4 +143,17 @@ locals {
         : var.helm_client_rbac_service_account != "" ? "--rbac-service-account ${var.helm_client_rbac_service_account}"
           : ""
   }"
+
+  esc_newl = "${module.os.name == "Windows" ? "`" : "\\"}"
+}
+
+module "os" {
+  source = "git::git@github.com:gruntwork-io/package-terraform-utilities.git//modules/operating-system?ref=v0.0.8"
+}
+
+module "require_executables" {
+  source = "git::git@github.com:gruntwork-io/package-terraform-utilities.git//modules/require-executable?ref=v0.0.8"
+
+  required_executables = ["kubergrunt"]
+  error_message        = "The __EXECUTABLE_NAME__ binary is not available in your PATH. Install the binary by following the instructions at https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/examples/k8s-tiller-kubergrunt-minikube/README.md#installing-necessary-tools, or update your PATH variable to search where you installed __EXECUTABLE_NAME__."
 }
