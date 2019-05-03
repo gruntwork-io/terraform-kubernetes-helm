@@ -15,8 +15,8 @@ variable "tiller_service_account_token_secret_name" {
   description = "The name of the Kubernetes Secret that holds the ServiceAccount token."
 }
 
-variable "tiller_tls_secret_name" {
-  description = "The name of the Kubernetes Secret that holds the TLS certificate key pair to use for Tiller. Needs to provide the TLS private key, public certificate, and CA certificate to use for verifying client TLS certificate key pairs."
+variable "tiller_tls_gen_method" {
+  description = "The method in which the TLS certs for Tiller are generated. Must be one of `provider`, `kubergrunt`, or `none`."
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -63,21 +63,6 @@ variable "service_annotations" {
   default     = {}
 }
 
-variable "tiller_tls_key_file_name" {
-  description = "The file name of the private key file for the server's TLS certificate key pair, as it is available in the Kubernetes Secret for the TLS certificates."
-  default     = "tls.key"
-}
-
-variable "tiller_tls_cert_file_name" {
-  description = "The file name of the public certificate file for the server's TLS certificate key pair, as it is available in the Kubernetes Secret for the TLS certificates."
-  default     = "tls.crt"
-}
-
-variable "tiller_tls_cacert_file_name" {
-  description = "The file name of the CA certificate file that can be used to validate client side TLS certificates, as it is available in the Kubernetes Secret for the TLS certificates."
-  default     = "ca.crt"
-}
-
 variable "tiller_image" {
   description = "The container image to use for the Tiller Pods."
   default     = "gcr.io/kubernetes-helm/tiller"
@@ -96,6 +81,83 @@ variable "tiller_image_pull_policy" {
 variable "tiller_history_max" {
   description = "The maximum number of revisions saved per release. Use 0 for no limit."
   default     = 0
+}
+
+variable "tiller_tls_key_file_name" {
+  description = "The file name of the private key file for the server's TLS certificate key pair, as it is available in the Kubernetes Secret for the TLS certificates."
+  default     = "tls.pem"
+}
+
+variable "tiller_tls_cert_file_name" {
+  description = "The file name of the public certificate file for the server's TLS certificate key pair, as it is available in the Kubernetes Secret for the TLS certificates."
+  default     = "tls.crt"
+}
+
+variable "tiller_tls_cacert_file_name" {
+  description = "The file name of the CA certificate file that can be used to validate client side TLS certificates, as it is available in the Kubernetes Secret for the TLS certificates."
+  default     = "ca.crt"
+}
+
+variable "tiller_tls_secret_name" {
+  description = "The name of the Kubernetes Secret that holds the TLS certificate key pair to use for Tiller. Needs to provide the TLS private key, public certificate, and CA certificate to use for verifying client TLS certificate key pairs. Used when var.tiller_tls_gen_method = none."
+  default     = ""
+}
+
+variable "tiller_tls_subject" {
+  description = "The issuer information that contains the identifying information for the Tiller server. Used to generate the TLS certificate keypairs. Used when var.tiller_tls_gen_method is not none. See https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for a list of expected keys."
+  type        = "map"
+
+  default = {
+    common_name  = "tiller"
+    organization = "Gruntwork"
+  }
+}
+
+variable "private_key_algorithm" {
+  description = "The name of the algorithm to use for private keys. Must be one of: RSA or ECDSA."
+  default     = "ECDSA"
+}
+
+variable "private_key_ecdsa_curve" {
+  description = "The name of the elliptic curve to use. Should only be used if var.private_key_algorithm is ECDSA. Must be one of P224, P256, P384 or P521."
+  default     = "P256"
+}
+
+variable "private_key_rsa_bits" {
+  description = "The size of the generated RSA key in bits. Should only be used if var.private_key_algorithm is RSA."
+  default     = "2048"
+}
+
+variable "tiller_tls_ca_cert_secret_namespace" {
+  description = "The Kubernetes Namespace to use to store the CA certificate key pair."
+  default     = "kube-system"
+}
+
+# kubergrunt and kubectl Authentication params
+
+variable "kubectl_config_context_name" {
+  description = "The config context to use when authenticating to the Kubernetes cluster. If empty, defaults to the current context specified in the kubeconfig file. Used when var.tiller_tls_gen_method is kubergrunt."
+  default     = ""
+}
+
+variable "kubectl_config_path" {
+  description = "The path to the config file to use for kubectl. If empty, defaults to $HOME/.kube/config. Used when var.tiller_tls_gen_method is kubergrunt."
+  default     = "~/.kube/config"
+}
+
+variable "kubectl_server_endpoint" {
+  description = "The endpoint of the Kubernetes API to access when authenticating to the Kubernetes cluster. Use as an alternative to config and config context. When set, var.kubectl_ca_b64_data and var.kubectl_token must be provided. Used when var.tiller_tls_gen_method is kubergrunt."
+  default     = ""
+}
+
+variable "kubectl_ca_b64_data" {
+  description = "The bas64 encoded certificate authority of the Kubernetes API when authenticating to the Kubernetes cluster. Use as an alternative to config and config context. Must be set when var.kubectl_server_endpoint is not empty. Used when var.tiller_tls_gen_method is kubergrunt."
+  default     = ""
+}
+
+variable "kubectl_token" {
+  description = "The authentication token to use when authenticating to the Kubernetes cluster. Use as an alternative to config and config context. Must be set when var.kubectl_server_endpoint is not empty. Used when var.tiller_tls_gen_method is kubergrunt."
+  default     = ""
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

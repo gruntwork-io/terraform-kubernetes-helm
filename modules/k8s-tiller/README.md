@@ -85,6 +85,7 @@ This will create the default roles in the `kube-system` `Namespace`. Then, it wi
 `kube-system` `Namespace`. This allows the `tiller` `ServiceAccount` to manage it's state in Kubernetes `Secrets` in the
 `kube-system` `Namespace`, and deploy resources in there.
 
+
 ### TLS authentication and verification
 
 This module installs Tiller with TLS verification turned on. If you are unfamiliar with TLS/SSL, we recommend reading
@@ -115,8 +116,99 @@ To summarize, assuming a single client, in this model we have three sets of TLS 
 - Key pair to identify Tiller.
 - Key pair to identify the client.
 
-You can use `kubergrunt` to manage TLS certificates optimized for use with Tiller. `kubergrunt` provides various
-primitives that can be used for generating and managing TLS certificates using Kubernetes `Secrets`. This allows you to
-manage access to Helm using the RBAC system of Kubernetes. See the [k8s-tiller-minikube
-example](/examples/k8s-tiller-minikube) for an example of how to use `kubergrunt` to generate TLS certs for use with
-this module.
+This module supports three ways to setup the CA and server side TLS certificates for Tiller:
+
+- [Directly passing it in](#directly-passing-in-tls-certs)
+- [Generating with `tls` provider](#generating-with-tls-provider)
+- [Generating with `kubergrunt`](#generating-with-kubergrunt)
+
+Summary of differences:
+
+<!-- This table is generated using https://www.tablesgenerator.com/markdown_tables -->
+
+| **Method** | **Amount of Control** | **Terraform Features** | **Secrets in Terraform State**            | **External Dependencies**                    |
+|------------|-----------------------|------------------------|-------------------------------------------|----------------------------------------------|
+| Direct     | Full control          | Limited support        | Only references                           | Yes (TLS certs must be generated externally) |
+| Provider   | Limited control       | Full support           | All Secrets are stored in Terraform State | No                                           |
+| Kubergrunt | Limited control       | Limited support        | Only references                           | Yes (kubergrunt binary)                      |
+
+
+#### Directly passing in TLS certs
+
+This method of configuring the TLS certs requires that the TLS certs have already been generated. To use this method,
+set `tiller_tls_gen_method` to `"none"`.
+
+Tiller expects to mount the TLS keys from a `Secret` resource. To directly pass in to Tiller, you must first upload the
+TLS certificate key pair with the CA public certificate into a `Secret` resource in the `Namespace` where you intend on
+deploying Tiller. Then, you can pass in the name of the `Secret` as the `tiller_tls_secret_name` variable to this module
+to deploy Tiller with that `Secret` mounted. You can configure what keys to read the certificate key pairs from using
+the `tiller_tls_key_file_name`, `tiller_tls_cert_file_name`, and `tiller_tls_cacert_file_name` variables for the private
+key, public certificate, and CA public certificate files respectively.
+
+
+#### Generating with `tls` provider
+
+**WARNING: The private keys generated using this method will be stored unencrypted in your Terraform state file. If you
+are sensitive to storing secrets in your Terraform state file, consider using `kubergrunt` to generate and manage your
+TLS certificate. See [Generating with kubergrunt](#generating-with-kubergrunt) for more details.**
+
+This method of configuring the TLS certs utilizes the [k8s-tiller-tls-certs module](../k8s-tiller-tls-certs) to generate
+the TLS CA, and a signed certificate key pair for Tiller using that CA. To use this method, set `tiller_tls_gen_method`
+to `"provider"`.
+
+When this method is set, the module will call out to `k8s-tiller-tls-certs` to generate TLS certificate key pairs that
+are then stored as Kubernetes `Secrets`. Under the hood the
+`k8s-tiller-tls-certs` module uses the [tls
+provider](https://www.terraform.io/docs/providers/tls/index.html) to generate the TLS certificates, and the [kubernetes
+provider](https://www.terraform.io/docs/providers/kubernetes/index.html) to manage the Secrets.
+
+The main advantage of this approach is that everything will be managed in Terraform. This means that you have access to
+the full lifecycle of Terraform, including `plan` to see drift and `destroy` to undo your changes.
+
+This method requires specifying the TLS subject info as the `tiller_tls_subject` input map, which is used to generate
+the identifying information of the certificate. See
+https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for a list of expected keys for this map.
+
+
+#### Generating with kubergrunt
+
+**WARNING: This method requires the `kubergrunt` binary to be installed and available. See
+https://github.com/gruntwork-io/kubergrunt for installation instructions.**
+
+This method of configuring the TLS certs utilizes [kubergrunt](https://github.com/gruntwork-io/kubergrunt) to generate
+the TLS CA, and a signed certificate key pair for Tiller using that CA. To use this method, set `tiller_tls_gen_method`
+to `"kubergrunt"`.
+
+When this method is set, the module will call out to `kubergrunt` to generate the TLS certificate key pairs and store
+them as Kubernetes `Secrets`. `kubergrunt` handles both steps in a single callout, which keeps the TLS certificates from
+leaking into the Terraform state file. The only thing that is stored in the state is the Kubernetes `Secret` references,
+not the contents. However, because this uses `null_resources` and an external binary, not all features of Terraform are
+available. For example, you can not rely on `plan` to see drift if anything changes about the Kubernetes `Secret`
+storing the TLS certs.
+
+This method requires specifying the TLS subject info as the `tiller_tls_subject` input map, which is used to generate
+the identifying information of the certificate. See
+https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for a list of expected keys for this map.
+
+This method also requires configuring authentication to the Kubernetes cluster. Currently `kubergrunt` only supports
+either using config contexts, or directly passing in tokens and server info. Note that you can not mix the two methods
+(e.g you cannot pull the server info from the context and use a passed in token).
+
+Using config contexts is the default authentication method. When no authentication parameters are set, `kubergrunt` will
+load the default context from the default config location (typically `$HOME/.kube/config`). You can control which
+context to use using the input variable `kubectl_config_context_name`. You can also specify your config file location
+using the input variable `kubectl_config_path`.
+
+If you wish to avoid using the config, you can pass in the server and token info directly. This method is automatically
+chosen if the `kubectl_server_endpoint` is provided. Note that `kubectl_ca_b64_data` and `kubectl_token` must also be
+provided for this method.
+
+
+## How do I grant access to other users?
+
+In order to access Tiller, you will typically need to generate additional signed certificates using the generated TLS CA
+certs. If you used the direct method, you will have to rely on your certificate provider to sign additional client
+certificates. For ther other two methods, you can take a look at [How do you use the generated TLS certs to sign
+additional
+certificates](../k8s-tiller-tls-certs/README.md#how-do-you-use-the-generated-tls-certs-to-sign-additional-certificates)
+for information on how sign additional certificates using the generated TLS CA.
