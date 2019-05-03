@@ -98,8 +98,29 @@ Follow these steps to use it as a temporary module:
 1. Delete your local Terraform state: `rm -rf terraform.tfstate*`. The Terraform state will contain the private keys for
    the certificates, so it's important to clean it up!
 
-The user can then install the certs and setup the client in a similar manner to the process described in [Verify Tiller
-Deployment](#verify-tiller-deployment)
+The user can then install the certs and setup the client by installing them into the helm home directory, and then
+running `helm init`. For example:
+
+```bash
+mkdir -p $HOME/.helm
+cp client.pem $HOME/.helm
+cp client.crt $HOME/.helm
+cp ca.crt $HOME/.helm
+helm init --client-only
+```
+
+Once the certificates are installed and the client is configured, your user is ready to use `helm`. However, by default
+the `helm` client does not assume a TLS setup. In order for the `helm` client to properly communicate with the deployed
+Tiller instance, it needs to be told to use TLS verification. These are specified through command line arguments. If
+everything is configured correctly, you should be able to access the Tiller that was deployed with the following args:
+
+```
+helm version --tls --tls-verify --tiller-namespace NAMESPACE_OF_TILLER
+```
+
+If you have access to Tiller, this should return you both the client version and the server version of Helm. Note that
+you need to pass the above CLI argument every time you want to use `helm`.
+
 
 #### Using kubergrunt
 
@@ -120,4 +141,12 @@ This in turn allows your users to configure their local client using `kubergrunt
 kubergrunt helm configure --tiller-namespace NAMESPACE_OF_TILLER --rbac-group dev
 ```
 
-At the end of this, your users should have the same helm client setup as above.
+At the end of this, your users is ready to use `helm`. However, like the previous method, you will need to enable a few
+flags on the `helm` client to indicate that TLS verification is required. For convenience, `kubergrunt` also installs an
+environment file into your helm home directory that sets the same flags using environment variables. You can dot source
+this file to use `helm` without passing in the flags:
+
+```
+. ~/.helm/env
+helm version
+```
