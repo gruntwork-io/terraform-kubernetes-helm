@@ -468,6 +468,10 @@ locals {
    } ${local.esc_newl}
   EOF
 
-  # TODO: When package-terraform-utilities is available, replace
-  esc_newl = "\\"
+  esc_newl = "${module.os.name == "Windows" ? "`" : "\\"}"
+}
+
+# Identify the operating system platform we are executing on
+module "os" {
+  source = "git::git@github.com:gruntwork-io/package-terraform-utilities.git//modules/operating-system?ref=v0.0.8"
 }
