@@ -14,6 +14,57 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// This test makes sure the root example can run without errors on a machine without kubergrunt
+func TestK8STillerNoKubergrunt(t *testing.T) {
+	t.Parallel()
+
+	if kubergruntInstalled(t) {
+		t.Skip("This test assumes kubergrunt is not installed.")
+	}
+
+	// os.Setenv("SKIP_create_test_copy_of_examples", "true")
+	// os.Setenv("SKIP_create_test_service_account", "true")
+	// os.Setenv("SKIP_create_terratest_options", "true")
+	// os.Setenv("SKIP_terraform_apply", "true")
+	// os.Setenv("SKIP_cleanup", "true")
+
+	// Create a directory path that won't conflict
+	workingDir := filepath.Join(".", "stages", t.Name())
+
+	test_structure.RunTestStage(t, "create_test_copy_of_examples", func() {
+		uniqueID := random.UniqueId()
+		k8sTillerTerraformModulePath := test_structure.CopyTerraformFolderToTemp(t, "..", ".")
+		logger.Logf(t, "path to test folder %s\n", k8sTillerTerraformModulePath)
+		helmHome := filepath.Join(k8sTillerTerraformModulePath, ".helm")
+		// make sure to create the helm home directory
+		require.NoError(t, os.Mkdir(helmHome, 0700))
+
+		test_structure.SaveString(t, workingDir, "k8sTillerTerraformModulePath", k8sTillerTerraformModulePath)
+		test_structure.SaveString(t, workingDir, "helmHome", helmHome)
+		test_structure.SaveString(t, workingDir, "uniqueID", uniqueID)
+	})
+
+	test_structure.RunTestStage(t, "create_terratest_options", func() {
+		uniqueID := test_structure.LoadString(t, workingDir, "uniqueID")
+		helmHome := test_structure.LoadString(t, workingDir, "helmHome")
+		k8sTillerTerraformModulePath := test_structure.LoadString(t, workingDir, "k8sTillerTerraformModulePath")
+
+		k8sTillerTerratestOptions := createExampleK8STillerTerraformOptions(t, k8sTillerTerraformModulePath, helmHome, uniqueID)
+
+		test_structure.SaveTerraformOptions(t, workingDir, k8sTillerTerratestOptions)
+	})
+
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		k8sTillerTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
+		terraform.Destroy(t, k8sTillerTerratestOptions)
+	})
+
+	test_structure.RunTestStage(t, "terraform_apply", func() {
+		k8sTillerTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
+		terraform.InitAndApply(t, k8sTillerTerratestOptions)
+	})
+}
+
 func TestK8STiller(t *testing.T) {
 	t.Parallel()
 
@@ -145,4 +196,14 @@ func runKubergruntWait(
 		Args:    kubergruntArgs,
 	}
 	shell.RunCommand(t, cmd)
+}
+
+func kubergruntInstalled(t *testing.T) bool {
+	cmd := shell.Command{
+		Command: "kubergrunt",
+		Args:    []string{"version"},
+	}
+	err := shell.RunCommandE(t, cmd)
+	return err == nil
+
 }
