@@ -19,6 +19,11 @@ variable "tls_subject" {
   description = "The issuer information that contains the identifying information for the Tiller server. Used to generate the TLS certificate keypairs."
   type        = "map"
 
+  default = {
+    common_name = "tiller"
+    org         = "Gruntwork"
+  }
+
   # Expects the following keys
   # - common_name
   # - org
@@ -31,6 +36,11 @@ variable "tls_subject" {
 variable "client_tls_subject" {
   description = "The issuer information that contains the identifying information for the helm client of the operator. Used to generate the TLS certificate keypairs."
   type        = "map"
+
+  default = {
+    common_name = "admin"
+    org         = "Gruntwork"
+  }
 
   # Expects the following keys
   # - common_name
