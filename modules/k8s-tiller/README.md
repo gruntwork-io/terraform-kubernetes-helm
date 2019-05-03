@@ -181,8 +181,9 @@ https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for 
 
 #### Generating with kubergrunt
 
-**WARNING: This method requires the `kubergrunt` binary to be installed and available. See
-https://github.com/gruntwork-io/kubergrunt for installation instructions.**
+**WARNING: This method requires the `kubergrunt` and `kubectl` binaries to be installed and available. See
+https://github.com/gruntwork-io/kubergrunt for installation instructions for `kubergrunt`, and
+https://kubernetes.io/docs/tasks/tools/install-kubectl/ for installation instructions for `kubectl`.**
 
 This method of configuring the TLS certs utilizes [kubergrunt](https://github.com/gruntwork-io/kubergrunt) to generate
 the TLS CA, and a signed certificate key pair for Tiller using that CA. To use this method, set `tiller_tls_gen_method`
