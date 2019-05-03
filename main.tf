@@ -64,51 +64,6 @@ module "tiller_service_account" {
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# GENERATE TLS CERTIFICATES FOR USE WITH TILLER
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-module "tiller_tls_certs" {
-  # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
-  # to a specific version of the modules, such as the following example:
-  # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-tiller-tls-certs?ref=v0.3.1"
-  source = "./modules/k8s-tiller-tls-certs"
-
-  ca_tls_subject = "${
-    merge(
-      var.tls_subject,
-      map("common_name", "${lookup(var.tls_subject, "common_name")}-ca"),
-    )
-  }"
-
-  # We store the CA in the kube-system namespace, as opposed to the Tiller namespace, because Tiller has access to
-  # Secrets in the Tiller Namespace. This means that users who have access to deploy things using Tiller will be able to
-  # read that Secret.
-  ca_tls_certificate_key_pair_secret_namespace = "kube-system"
-
-  ca_tls_certificate_key_pair_secret_name = "${module.tiller_namespace.name}-namespace-tiller-ca-certs"
-
-  ca_tls_certificate_key_pair_secret_labels = {
-    "gruntwork.io/tiller-namespace"        = "${module.tiller_namespace.name}"
-    "gruntwork.io/tiller-credentials"      = "true"
-    "gruntwork.io/tiller-credentials-type" = "ca"
-  }
-
-  signed_tls_subject                               = "${var.tls_subject}"
-  signed_tls_certificate_key_pair_secret_namespace = "${module.tiller_namespace.name}"
-  signed_tls_certificate_key_pair_secret_name      = "${module.tiller_namespace.name}-namespace-tiller-certs"
-
-  signed_tls_certificate_key_pair_secret_labels = {
-    "gruntwork.io/tiller-namespace"        = "${module.tiller_namespace.name}"
-    "gruntwork.io/tiller-credentials"      = "true"
-    "gruntwork.io/tiller-credentials-type" = "server"
-  }
-
-  private_key_algorithm   = "${var.private_key_algorithm}"
-  private_key_ecdsa_curve = "${var.private_key_ecdsa_curve}"
-  private_key_rsa_bits    = "${var.private_key_rsa_bits}"
-}
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # DEPLOY TILLER
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -120,13 +75,14 @@ module "tiller" {
 
   tiller_service_account_name              = "${module.tiller_service_account.name}"
   tiller_service_account_token_secret_name = "${module.tiller_service_account.token_secret_name}"
-  tiller_tls_secret_name                   = "${module.tiller_tls_certs.signed_tls_certificate_key_pair_secret_name}"
   namespace                                = "${module.tiller_namespace.name}"
   tiller_image_version                     = "${var.tiller_version}"
 
-  # To make the TLS certs compatible with Kubergrunt, we need to store the private key under the key "tls.pem" in the
-  # corresponding Secret resource, which will be accessed as a file when mounted into the container.
-  tiller_tls_key_file_name = "tls.pem"
+  tiller_tls_gen_method   = "provider"
+  tiller_tls_subject      = "${var.tls_subject}"
+  private_key_algorithm   = "${var.private_key_algorithm}"
+  private_key_ecdsa_curve = "${var.private_key_ecdsa_curve}"
+  private_key_rsa_bits    = "${var.private_key_rsa_bits}"
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -140,8 +96,8 @@ module "helm_client_tls_certs" {
   # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-helm-client-tls-certs?ref=v0.3.1"
   source = "./modules/k8s-helm-client-tls-certs"
 
-  ca_tls_certificate_key_pair_secret_namespace = "${module.tiller_tls_certs.ca_tls_certificate_key_pair_secret_namespace}"
-  ca_tls_certificate_key_pair_secret_name      = "${module.tiller_tls_certs.ca_tls_certificate_key_pair_secret_name}"
+  ca_tls_certificate_key_pair_secret_namespace = "${module.tiller.tiller_ca_tls_certificate_key_pair_secret_namespace}"
+  ca_tls_certificate_key_pair_secret_name      = "${module.tiller.tiller_ca_tls_certificate_key_pair_secret_name}"
 
   tls_subject                               = "${var.client_tls_subject}"
   tls_certificate_key_pair_secret_namespace = "${module.tiller_namespace.name}"

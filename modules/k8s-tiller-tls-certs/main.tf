@@ -14,18 +14,38 @@ terraform {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+# SET MODULE DEPENDENCY RESOURCE
+# This works around a terraform limitation where we can not specify module dependencies natively.
+# See https://github.com/hashicorp/terraform/issues/1178 for more discussion.
+# By resolving and computing the dependencies list, we are able to make all the resources in this module depend on the
+# resources backing the values in the dependencies list.
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "null_resource" "dependency_getter" {
+  triggers = {
+    instance = "${join(",", var.dependencies)}"
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 #  CREATE A CA CERTIFICATE
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "tls_private_key" "ca" {
+  count      = "${var.create_resources ? 1 : 0}"
+  depends_on = ["null_resource.dependency_getter"]
+
   algorithm   = "${var.private_key_algorithm}"
   ecdsa_curve = "${var.private_key_ecdsa_curve}"
   rsa_bits    = "${var.private_key_rsa_bits}"
 }
 
 resource "tls_self_signed_cert" "ca" {
-  key_algorithm     = "${tls_private_key.ca.algorithm}"
-  private_key_pem   = "${tls_private_key.ca.private_key_pem}"
+  count      = "${var.create_resources ? 1 : 0}"
+  depends_on = ["null_resource.dependency_getter"]
+
+  key_algorithm     = "${element(concat(tls_private_key.ca.*.algorithm, list("")), 0)}"
+  private_key_pem   = "${element(concat(tls_private_key.ca.*.private_key_pem, list("")), 0)}"
   is_ca_certificate = true
 
   validity_period_hours = "${var.validity_period_hours}"
@@ -39,6 +59,9 @@ resource "tls_self_signed_cert" "ca" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "kubernetes_secret" "ca_secret" {
+  count      = "${var.create_resources ? 1 : 0}"
+  depends_on = ["null_resource.dependency_getter"]
+
   metadata {
     namespace   = "${var.ca_tls_certificate_key_pair_secret_namespace}"
     name        = "${var.ca_tls_certificate_key_pair_secret_name}"
@@ -48,9 +71,9 @@ resource "kubernetes_secret" "ca_secret" {
 
   data = "${
     map(
-      "${var.ca_tls_certificate_key_pair_secret_filename_base}.pem", "${tls_private_key.ca.private_key_pem}",
-      "${var.ca_tls_certificate_key_pair_secret_filename_base}.pub", "${tls_private_key.ca.public_key_pem}",
-      "${var.ca_tls_certificate_key_pair_secret_filename_base}.crt", "${tls_self_signed_cert.ca.cert_pem}",
+      "${var.ca_tls_certificate_key_pair_secret_filename_base}.pem", "${element(concat(tls_private_key.ca.*.private_key_pem, list("")), 0)}",
+      "${var.ca_tls_certificate_key_pair_secret_filename_base}.pub", "${element(concat(tls_private_key.ca.*.public_key_pem, list("")), 0)}",
+      "${var.ca_tls_certificate_key_pair_secret_filename_base}.crt", "${element(concat(tls_self_signed_cert.ca.*.cert_pem, list("")), 0)}",
     )
   }"
 }
@@ -60,14 +83,19 @@ resource "kubernetes_secret" "ca_secret" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "tls_private_key" "cert" {
+  count      = "${var.create_resources ? 1 : 0}"
+  depends_on = ["null_resource.dependency_getter"]
+
   algorithm   = "${var.private_key_algorithm}"
   ecdsa_curve = "${var.private_key_ecdsa_curve}"
   rsa_bits    = "${var.private_key_rsa_bits}"
 }
 
 resource "tls_cert_request" "cert" {
-  key_algorithm   = "${tls_private_key.cert.algorithm}"
-  private_key_pem = "${tls_private_key.cert.private_key_pem}"
+  count = "${var.create_resources ? 1 : 0}"
+
+  key_algorithm   = "${element(concat(tls_private_key.cert.*.algorithm, list("")), 0)}"
+  private_key_pem = "${element(concat(tls_private_key.cert.*.private_key_pem, list("")), 0)}"
 
   dns_names    = ["${var.signed_tls_certs_dns_names}"]
   ip_addresses = ["${var.signed_tls_certs_ip_addresses}"]
@@ -76,11 +104,14 @@ resource "tls_cert_request" "cert" {
 }
 
 resource "tls_locally_signed_cert" "cert" {
-  cert_request_pem = "${tls_cert_request.cert.cert_request_pem}"
+  count      = "${var.create_resources ? 1 : 0}"
+  depends_on = ["null_resource.dependency_getter"]
 
-  ca_key_algorithm   = "${tls_private_key.ca.algorithm}"
-  ca_private_key_pem = "${tls_private_key.ca.private_key_pem}"
-  ca_cert_pem        = "${tls_self_signed_cert.ca.cert_pem}"
+  cert_request_pem = "${element(concat(tls_cert_request.cert.*.cert_request_pem, list("")), 0)}"
+
+  ca_key_algorithm   = "${element(concat(tls_private_key.ca.*.algorithm, list("")), 0)}"
+  ca_private_key_pem = "${element(concat(tls_private_key.ca.*.private_key_pem, list("")), 0)}"
+  ca_cert_pem        = "${element(concat(tls_self_signed_cert.ca.*.cert_pem, list("")), 0)}"
 
   validity_period_hours = "${var.validity_period_hours}"
   allowed_uses          = ["${var.signed_tls_certs_allowed_uses}"]
@@ -91,6 +122,9 @@ resource "tls_locally_signed_cert" "cert" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "kubernetes_secret" "signed_tls" {
+  count      = "${var.create_resources ? 1 : 0}"
+  depends_on = ["null_resource.dependency_getter"]
+
   metadata {
     namespace   = "${var.signed_tls_certificate_key_pair_secret_namespace}"
     name        = "${var.signed_tls_certificate_key_pair_secret_name}"
@@ -100,10 +134,10 @@ resource "kubernetes_secret" "signed_tls" {
 
   data = "${
     map(
-      "${var.signed_tls_certificate_key_pair_secret_filename_base}.pem", "${tls_private_key.cert.private_key_pem}",
-      "${var.signed_tls_certificate_key_pair_secret_filename_base}.pub", "${tls_private_key.cert.public_key_pem}",
-      "${var.signed_tls_certificate_key_pair_secret_filename_base}.crt", "${tls_locally_signed_cert.cert.cert_pem}",
-      "${var.ca_tls_certificate_key_pair_secret_filename_base}.crt", "${tls_self_signed_cert.ca.cert_pem}",
+      "${var.signed_tls_certificate_key_pair_secret_filename_base}.pem", "${element(concat(tls_private_key.cert.*.private_key_pem, list("")), 0)}",
+      "${var.signed_tls_certificate_key_pair_secret_filename_base}.pub", "${element(concat(tls_private_key.cert.*.public_key_pem, list("")), 0)}",
+      "${var.signed_tls_certificate_key_pair_secret_filename_base}.crt", "${element(concat(tls_locally_signed_cert.cert.*.cert_pem, list("")), 0)}",
+      "${var.ca_tls_certificate_key_pair_secret_filename_base}.crt", "${element(concat(tls_self_signed_cert.ca.*.cert_pem, list("")), 0)}",
     )
   }"
 }

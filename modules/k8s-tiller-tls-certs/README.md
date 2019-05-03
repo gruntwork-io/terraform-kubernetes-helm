@@ -60,3 +60,64 @@ ca_tls_certificate_key_pair_secret_name = "{NAME_OF_TILLER_NAMESPACE}-namespace-
 
 With these input variables, `kubergrunt` should be able to locate the generated CA certs and use them to generate client
 side certs when you use the `kubergrunt helm grant` command.
+
+
+## How do you use the generated TLS certs to sign additional certificates?
+
+In order to access Tiller, you will typically need to generate additional signed certificates using the generated TLS CA
+certs. You have two options for generating the client side TLS certs:
+
+- [Using the `k8s-helm-client-tls-certs` module](#using-the-k8s-helm-client-tls-certs-module)
+- [Using `kubergrunt`](#using-kubergrunt)
+
+#### Using the k8s-helm-client-tls-certs module
+
+`k8s-helm-client-tls-certs` is designed to take a CA TLS cert generated using `k8s-tiller-tls-certs` and generate new
+signed TLS certs that can be used as verified clients. To use the module for this purpose, you can either call out to
+the module in your terraform code (like we do here to generate one for the operator), or use it directly as a temporary
+module.
+
+Follow these steps to use it as a temporary module:
+
+1. Copy this module to your computer.
+1. Open `variables.tf` and fill in the variables that do not have a default.
+1. DO NOT configure Terraform remote state storage for this code. You do NOT want to store the state files as they will
+   contain the private keys for the certificates.
+1. DO NOT configure `store_in_kubernetes_secret` to `true`. You do NOT want to store the certificates in Kubernetes
+   without the state file.
+1. Run `terraform apply`.
+1. Extract the generated certificates from the output and store to a file. E.g:
+
+    ```bash
+    terraform output tls_certificate_key_pair_private_key_pem > client.pem
+    terraform output tls_certificate_key_pair_certificate_pem > client.crt
+    terraform output ca_tls_certificate_key_pair_certificate_pem > ca.crt
+    ```
+
+1. Share the extracted files with the user.
+1. Delete your local Terraform state: `rm -rf terraform.tfstate*`. The Terraform state will contain the private keys for
+   the certificates, so it's important to clean it up!
+
+The user can then install the certs and setup the client in a similar manner to the process described in [Verify Tiller
+Deployment](#verify-tiller-deployment)
+
+#### Using kubergrunt
+
+`kubergrunt` automates this process in the `grant` and `configure` commands. For example, suppose you wanted to grant
+access to the deployed Tiller to a group of users grouped under the RBAC group `dev`. You can grant them access using
+the following command:
+
+```
+kubergrunt helm grant --tiller-namespace NAMESPACE_OF_TILLER --rbac-group dev --tls-common-name dev --tls-org YOUR_ORG
+```
+
+This will generate a new certificate key pair for the client and upload it as a `Secret`. Then, it will bind new RBAC
+roles to the `dev` RBAC group that grants it permission to access the Tiller pod and the uploaded `Secret`.
+
+This in turn allows your users to configure their local client using `kubergrunt`:
+
+```
+kubergrunt helm configure --tiller-namespace NAMESPACE_OF_TILLER --rbac-group dev
+```
+
+At the end of this, your users should have the same helm client setup as above.
