@@ -137,7 +137,7 @@ Summary of differences:
 
 | **Method** | **Amount of Control** | **Terraform Features** | **Secrets in Terraform State**            | **External Dependencies**                    |
 |------------|-----------------------|------------------------|-------------------------------------------|----------------------------------------------|
-| Direct     | Full control          | Limited support        | Only references                           | Yes (TLS certs must be generated externally) |
+| Direct     | Full control          | N/A                    | Only references                           | Yes (TLS certs must be generated externally) |
 | Provider   | Limited control       | Full support           | All Secrets are stored in Terraform State | No                                           |
 | Kubergrunt | Limited control       | Limited support        | Only references                           | Yes (kubergrunt binary)                      |
 
