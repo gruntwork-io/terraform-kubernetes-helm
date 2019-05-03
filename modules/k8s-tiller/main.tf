@@ -259,7 +259,7 @@ resource "null_resource" "tiller_tls_ca_certs" {
 
   provisioner "local-exec" {
     command = <<-EOF
-    kubergrunt tls gen ${local.esc_newl}
+    ${lookup(module.require_executables.executables, "kubergrunt", "")} tls gen ${local.esc_newl}
       ${local.kubergrunt_auth_params} ${local.esc_newl}
       --ca ${local.esc_newl}
       --namespace ${var.tiller_tls_ca_cert_secret_namespace} ${local.esc_newl}
@@ -285,7 +285,7 @@ resource "null_resource" "tiller_tls_ca_certs" {
 
     command = <<-EOF
     ${var.kubectl_server_endpoint != "" ? "echo \"$KUBECTL_CA_DATA\" > ${path.module}/kubernetes_server_ca.pem" : ""}
-    kubectl ${local.esc_newl}
+    ${lookup(module.require_executables.executables, "kubectl", "")} ${local.esc_newl}
       ${local.kubectl_auth_params} ${local.esc_newl}
       --namespace ${var.tiller_tls_ca_cert_secret_namespace} ${local.esc_newl}
       delete secret ${local.tiller_tls_ca_certs_secret_name}
@@ -311,7 +311,7 @@ resource "null_resource" "tiller_tls_certs" {
 
   provisioner "local-exec" {
     command = <<-EOF
-    kubergrunt tls gen ${local.esc_newl}
+    ${lookup(module.require_executables.executables, "kubergrunt", "")} tls gen ${local.esc_newl}
       ${local.kubergrunt_auth_params} ${local.esc_newl}
       --namespace ${var.namespace} ${local.esc_newl}
       --ca-secret-name ${local.tiller_tls_ca_certs_secret_name} ${local.esc_newl}
@@ -338,7 +338,7 @@ resource "null_resource" "tiller_tls_certs" {
 
     command = <<-EOF
     ${var.kubectl_server_endpoint != "" ? "echo \"$KUBECTL_CA_DATA\" > ${path.module}/kubernetes_server_ca.pem" : ""}
-    kubectl ${local.esc_newl}
+    ${lookup(module.require_executables.executables, "kubectl", "")} ${local.esc_newl}
       ${local.kubectl_auth_params} ${local.esc_newl}
       --namespace ${var.namespace} ${local.esc_newl}
       delete secret ${local.tiller_tls_certs_secret_name}
@@ -351,6 +351,13 @@ resource "null_resource" "tiller_tls_certs" {
       KUBECTL_TOKEN           = "${var.kubectl_token}"
     }
   }
+}
+
+module "require_executables" {
+  source = "git::git@github.com:gruntwork-io/package-terraform-utilities.git//modules/require-executable?ref=v0.0.8"
+
+  required_executables = ["${var.tiller_tls_gen_method == "kubergrunt" ? list("kubergrunt", "kubectl") : list("")}"]
+  error_message        = "The __EXECUTABLE_NAME__ binary is not available in your PATH. Install the binary by following the instructions at https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/modules/k8s-tiller/README.md#generating-with-kubergrunt, or update your PATH variable to search where you installed __EXECUTABLE_NAME__."
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
