@@ -1,6 +1,6 @@
 output "name" {
   description = "The name of the created namespace."
-  value       = "${kubernetes_namespace.namespace.id}"
+  value       = "${element(concat(kubernetes_namespace.namespace.*.id, list("")), 0)}"
 }
 
 output "rbac_access_all_role" {

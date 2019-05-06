@@ -37,6 +37,9 @@ resource "null_resource" "dependency_getter" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "kubernetes_role" "rbac_role_access_all" {
+  count      = "${var.create_resources ? 1 : 0}"
+  depends_on = ["null_resource.dependency_getter"]
+
   metadata {
     name        = "${var.namespace}-access-all"
     namespace   = "${var.namespace}"
@@ -49,11 +52,12 @@ resource "kubernetes_role" "rbac_role_access_all" {
     resources  = ["*"]
     verbs      = ["*"]
   }
-
-  depends_on = ["null_resource.dependency_getter"]
 }
 
 resource "kubernetes_role" "rbac_role_access_read_only" {
+  count      = "${var.create_resources ? 1 : 0}"
+  depends_on = ["null_resource.dependency_getter"]
+
   metadata {
     name        = "${var.namespace}-access-read-only"
     namespace   = "${var.namespace}"
@@ -66,8 +70,6 @@ resource "kubernetes_role" "rbac_role_access_read_only" {
     resources  = ["*"]
     verbs      = ["get", "list", "watch"]
   }
-
-  depends_on = ["null_resource.dependency_getter"]
 }
 
 # These RBAC role permissions are based on the official example regarding deploying Tiller in a namespace to manage
@@ -75,6 +77,9 @@ resource "kubernetes_role" "rbac_role_access_read_only" {
 # See https://docs.helm.sh/using_helm/#example-deploy-tiller-in-a-namespace-restricted-to-deploying-resources-in-another-namespace
 
 resource "kubernetes_role" "rbac_tiller_metadata_access" {
+  count      = "${var.create_resources ? 1 : 0}"
+  depends_on = ["null_resource.dependency_getter"]
+
   metadata {
     name        = "${var.namespace}-tiller-metadata-access"
     namespace   = "${var.namespace}"
@@ -87,11 +92,12 @@ resource "kubernetes_role" "rbac_tiller_metadata_access" {
     resources  = ["secrets"]
     verbs      = ["*"]
   }
-
-  depends_on = ["null_resource.dependency_getter"]
 }
 
 resource "kubernetes_role" "rbac_tiller_resource_access" {
+  count      = "${var.create_resources ? 1 : 0}"
+  depends_on = ["null_resource.dependency_getter"]
+
   metadata {
     name        = "${var.namespace}-tiller-resource-access"
     namespace   = "${var.namespace}"
@@ -121,6 +127,4 @@ resource "kubernetes_role" "rbac_tiller_resource_access" {
     resources = ["poddisruptionbudgets"]
     verbs     = ["*"]
   }
-
-  depends_on = ["null_resource.dependency_getter"]
 }

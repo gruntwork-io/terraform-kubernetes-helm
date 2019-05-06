@@ -31,13 +31,14 @@ resource "null_resource" "dependency_getter" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "kubernetes_namespace" "namespace" {
+  count      = "${var.create_resources ? 1 : 0}"
+  depends_on = ["null_resource.dependency_getter"]
+
   metadata {
     name        = "${var.name}"
     labels      = "${var.labels}"
     annotations = "${var.annotations}"
   }
-
-  depends_on = ["null_resource.dependency_getter"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -48,8 +49,10 @@ resource "kubernetes_namespace" "namespace" {
 module "namespace_roles" {
   source = "../k8s-namespace-roles"
 
-  namespace    = "${kubernetes_namespace.namespace.id}"
-  labels       = "${var.labels}"
-  annotations  = "${var.annotations}"
-  dependencies = ["${var.dependencies}"]
+  namespace   = "${kubernetes_namespace.namespace.id}"
+  labels      = "${var.labels}"
+  annotations = "${var.annotations}"
+
+  create_resources = "${var.create_resources}"
+  dependencies     = ["${var.dependencies}"]
 }
