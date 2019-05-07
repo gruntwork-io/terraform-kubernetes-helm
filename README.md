@@ -83,6 +83,19 @@ document](https://github.com/gruntwork-io/kubergrunt/blob/master/HELM_GUIDE.md).
 <!-- TODO: ## What parts of the Production Grade Infrastructure Checklist are covered by this Module? -->
 
 
+## What's a Module?
+
+A Module is a canonical, reusable, best-practices definition for how to run a single piece of infrastructure, such
+as a database or server cluster. Each Module is written using a combination of [Terraform](https://www.terraform.io/)
+and scripts (mostly bash) and include automated tests, documentation, and examples. It is maintained both by the open
+source community and companies that provide commercial support.
+
+Instead of figuring out the details of how to run a piece of infrastructure from scratch, you can reuse
+existing code that has been proven in production. And instead of maintaining all that infrastructure code yourself,
+you can leverage the work of the Module community to pick up infrastructure improvements through
+a version number bump.
+
+
 ## Who maintains this Module?
 
 This Module and its Submodules are maintained by [Gruntwork](http://www.gruntwork.io/). If you are looking for help or
