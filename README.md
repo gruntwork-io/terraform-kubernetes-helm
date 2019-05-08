@@ -1,4 +1,5 @@
 [![Maintained by Gruntwork.io](https://img.shields.io/badge/maintained%20by-gruntwork.io-%235849a6.svg)](https://gruntwork.io/?ref=repo_terraform_kubernetes_helm)
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/gruntwork-io/terraform-kubernetes-helm.svg?label=latest)](https://github.com/gruntwork-io/terraform-kubernetes-helm/releases/latest)
 
 # Tiller Module
 
@@ -116,10 +117,10 @@ commercial support, send an email to
 Gruntwork can help with:
 
 * Setup, customization, and support for this Module.
-* Modules and submodules for other types of infrastructure, such as VPCs, Docker clusters, databases, and continuous
-  integration.
+* Modules and submodules for other types of infrastructure in major cloud providers, such as VPCs, Docker clusters,
+  databases, and continuous integration.
 * Modules and Submodules that meet compliance requirements, such as HIPAA.
-* Consulting & Training on AWS, Terraform, and DevOps.
+* Consulting & Training on AWS, GCP, Terraform, and DevOps.
 
 
 ## How do I contribute to this Module?
