@@ -93,7 +93,7 @@ module "tiller" {
 module "helm_client_tls_certs" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
-  # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-helm-client-tls-certs?ref=v0.3.1"
+  # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-helm-client-tls-certs?ref=v0.3.1"
   source = "./modules/k8s-helm-client-tls-certs"
 
   ca_tls_certificate_key_pair_secret_namespace = "${module.tiller.tiller_ca_tls_certificate_key_pair_secret_namespace}"

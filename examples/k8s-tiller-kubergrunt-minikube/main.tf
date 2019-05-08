@@ -22,7 +22,7 @@ provider "kubernetes" {
 module "tiller_namespace" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
-  # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.3.0"
+  # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.3.0"
   source = "../../modules/k8s-namespace"
 
   name = "${var.tiller_namespace}"
@@ -31,7 +31,7 @@ module "tiller_namespace" {
 module "resource_namespace" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
-  # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.3.0"
+  # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.3.0"
   source = "../../modules/k8s-namespace"
 
   name = "${var.resource_namespace}"
@@ -40,7 +40,7 @@ module "resource_namespace" {
 module "tiller_service_account" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
-  # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-service-account?ref=v0.3.0"
+  # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-service-account?ref=v0.3.0"
   source = "../../modules/k8s-service-account"
 
   name           = "${var.service_account_name}"
@@ -70,7 +70,7 @@ module "tiller_service_account" {
 module "tiller" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
-  # source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-tiller?ref=v0.3.0"
+  # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-tiller?ref=v0.3.0"
   source = "../../modules/k8s-tiller"
 
   tiller_service_account_name              = "${module.tiller_service_account.name}"
@@ -148,11 +148,11 @@ locals {
 }
 
 module "os" {
-  source = "git::git@github.com:gruntwork-io/package-terraform-utilities.git//modules/operating-system?ref=v0.0.8"
+  source = "git::https://github.com/gruntwork-io/package-terraform-utilities.git//modules/operating-system?ref=v0.0.8"
 }
 
 module "require_executables" {
-  source = "git::git@github.com:gruntwork-io/package-terraform-utilities.git//modules/require-executable?ref=v0.0.8"
+  source = "git::https://github.com/gruntwork-io/package-terraform-utilities.git//modules/require-executable?ref=v0.0.8"
 
   required_executables = ["kubergrunt"]
   error_message        = "The __EXECUTABLE_NAME__ binary is not available in your PATH. Install the binary by following the instructions at https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/examples/k8s-tiller-kubergrunt-minikube/README.md#installing-necessary-tools, or update your PATH variable to search where you installed __EXECUTABLE_NAME__."
