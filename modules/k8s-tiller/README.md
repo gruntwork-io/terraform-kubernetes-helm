@@ -55,13 +55,13 @@ sets that you can use in the [k8s-namespace-roles module](../k8s-namespace-roles
 
 ```hcl
 module "namespace_roles" {
-  source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace-roles?ref=v0.3.0"
+  source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace-roles?ref=v0.3.0"
 
   namespace    = "kube-system"
 }
 
 module "tiller_service_account" {
-  source = "git::git@github.com:gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-service-account?ref=v0.3.0"
+  source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-service-account?ref=v0.3.0"
 
   name           = "tiller"
   namespace      = "kube-system"

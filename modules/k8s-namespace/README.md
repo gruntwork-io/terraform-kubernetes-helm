@@ -43,12 +43,12 @@ We create the namespaces using this module:
 
 ```
 module "core_namespace" {
-  source = "git::git@github.com:gruntwork-io/package-k8s.git//modules/k8s-namespace?ref=v0.1.0"
+  source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.1.0"
   name = "core"
 }
 
 module "analytics_namespace" {
-  source = "git::git@github.com:gruntwork-io/package-k8s.git//modules/k8s-namespace?ref=v0.1.0"
+  source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.1.0"
   name = "analytics"
 }
 ```
