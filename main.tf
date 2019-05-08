@@ -103,8 +103,8 @@ module "helm_client_tls_certs" {
   tls_certificate_key_pair_secret_namespace = "${module.tiller_namespace.name}"
 
   # Kubergrunt expects client cert secrets to be stored under this name format
-  tls_certificate_key_pair_secret_name = "tiller-client-${md5(local.rbac_entity_id)}-certs"
 
+  tls_certificate_key_pair_secret_name = "tiller-client-${md5(local.rbac_entity_id)}-certs"
   tls_certificate_key_pair_secret_labels = {
     "gruntwork.io/tiller-namespace"        = "${module.tiller_namespace.name}"
     "gruntwork.io/tiller-credentials"      = "true"
