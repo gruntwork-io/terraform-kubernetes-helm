@@ -1,5 +1,9 @@
 # K8S Namespace Roles Module
 
+<!-- NOTE: We use absolute linking here instead of relative linking, because the terraform registry does not support
+           relative linking correctly.
+-->
+
 This Terraform Module defines a set of common Kubernetes
 [RBAC `Roles`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) for a `Namespace`. The following roles
 will be provided by this module:
@@ -15,11 +19,15 @@ will be provided by this module:
 
 ## How do you use this module?
 
-* See the [root README](/README.md) for instructions on using Terraform modules.
+* See the [root README](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/README.md) for
+  instructions on using Terraform modules.
 * This module uses [the `kubernetes` provider](https://www.terraform.io/docs/providers/kubernetes/index.html).
-* See the [examples](/examples) folder for example usage.
-* See [variables.tf](./variables.tf) for all the variables you can set on this module.
-* See [outputs.tf](./outputs.tf) for all the variables that are outputed by this module.
+* See the [examples](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/examples) folder for example
+  usage.
+* See [variables.tf](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/modules/k8s-namespace-roles/variables.tf)
+  for all the variables you can set on this module.
+* See [outputs.tf](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/modules/k8s-namespace-roles/outputs.tf)
+  for all the variables that are outputed by this module.
 
 
 ## What is Kubernetes Role Based Access Control (RBAC)?
