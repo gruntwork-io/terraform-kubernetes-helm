@@ -2,11 +2,16 @@
 
 # Tiller Module
 
+<!-- NOTE: We use absolute linking here instead of relative linking, because the terraform registry does not support
+           relative linking correctly.
+-->
+
 This repo contains a Module for deploying Tiller (the server component of Helm) on Kubernetes clusters with
 [Terraform](https://www.terraform.io).  This repo is a part of [the Gruntwork Infrastructure as Code
 Library](https://gruntwork.io/infrastructure-as-code-library/), a collection of reusable, battle-tested, production
-ready infrastructure code. Read the [Gruntwork Philosophy](GRUNTWORK_PHILOSOPHY.md) document to learn more about how
-Gruntwork builds production grade infrastructure code.
+ready infrastructure code. Read the [Gruntwork
+Philosophy](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/GRUNTWORK_PHILOSOPHY.md) document to
+learn more about how Gruntwork builds production grade infrastructure code.
 
 
 ## Quickstart Guide
@@ -26,24 +31,26 @@ The general idea is to:
    Tiller instance.
 1. Deploy Tiller.
 
-You can checkout the [`k8s-tiller-minikube` example documentation](/examples/k8s-tiller-minikube/README.md) for detailed
-instructions on deploying against `minikube`.
+You can checkout the [`k8s-tiller-minikube` example
+documentation](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/examples/k8s-tiller-minikube) for
+detailed instructions on deploying against `minikube`.
 
 
 ## What is in this repo
 
 This repo provides a Gruntwork IaC Package and has the following folder structure:
 
-* [root](./): The root folder contains an example of how to deploy Tiller using
-  [`kubergrunt`](https://github.com/gruntwork-io/kubergrunt), which implements all the logic for deploying Tiller with
-  all the security best practices.
-* [modules](/modules): This folder contains the main implementation code for this Module, broken down into multiple
-  standalone Submodules.
+* [root](https://github.com/gruntwork-io/terraform-kubernetes-helm): The root folder contains an example of how to
+  deploy Tiller using [`kubergrunt`](https://github.com/gruntwork-io/kubergrunt), which implements all the logic for
+  deploying Tiller with all the security best practices.
+* [modules](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/modules): This folder contains the
+  main implementation code for this Module, broken down into multiple standalone Submodules.
 
   The primary module is:
 
-    * [k8s-tiller](/modules/k8s-tiller): Deploy Tiller with all the security features turned on. This includes using
-      `Secrets` for storing state and enabling TLS verification.
+    * [k8s-tiller](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/modules/k8s-tiller): Deploy
+      Tiller with all the security features turned on. This includes using `Secrets` for storing state and enabling TLS
+      verification.
 
     The deployed Tiller requires TLS certificate key pairs to operate. Additionally, clients will each need to their
     own TLS certificate key pairs to authenticate to the deployed Tiller instance. This is based on [kubergrunt model of
@@ -51,13 +58,17 @@ This repo provides a Gruntwork IaC Package and has the following folder structur
 
     There are also several supporting modules that help with setting up the deployment:
 
-    * [k8s-namespace](/modules/k8s-namespace): Provision a Kubernetes `Namespace` with a default set of RBAC roles.
-    * [k8s-namespace-roles](/modules/k8s-namespace-roles): Provision a default set of RBAC roles to use in a `Namespace`.
-    * [k8s-service-account](/modules/k8s-service-account): Provision a Kubernetes `ServiceAccount`.
+    * [k8s-namespace](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/modules/k8s-namespace):
+      Provision a Kubernetes `Namespace` with a default set of RBAC roles.
+    * [k8s-namespace-roles](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/modules/k8s-namespace-roles):
+      Provision a default set of RBAC roles to use in a `Namespace`.
+    * [k8s-service-account](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/modules/k8s-service-account):
+      Provision a Kubernetes `ServiceAccount`.
 
-* [examples](/examples): This folder contains examples of how to use the Submodules. The [example root
-  README](/examples/README.md) provides a quickstart guide on how to use the Submodules in this Module.
-* [test](/test): Automated tests for the Submodules and examples.
+* [examples](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/examples): This folder contains
+  examples of how to use the Submodules.
+* [test](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/test): Automated tests for the Submodules
+  and examples.
 
 
 ## What is Kubernetes?
@@ -113,13 +124,14 @@ Gruntwork can help with:
 
 ## How do I contribute to this Module?
 
-Contributions are very welcome! Check out the [Contribution Guidelines](/CONTRIBUTING.md) for instructions.
+Contributions are very welcome! Check out the [Contribution
+Guidelines](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/CONTRIBUTING.md) for instructions.
 
 
 ## How is this Module versioned?
 
 This Module follows the principles of [Semantic Versioning](http://semver.org/). You can find each new release, along
-with the changelog, in the [Releases Page](../../releases).
+with the changelog, in the [Releases Page](https://github.com/gruntwork-io/terraform-kubernetes-helm/releases).
 
 During initial development, the major version will be 0 (e.g., `0.x.y`), which indicates the code does not yet have a
 stable API. Once we hit `1.0.0`, we will make every effort to maintain a backwards compatible API and use the MAJOR,
@@ -128,6 +140,7 @@ MINOR, and PATCH versions on each release to indicate any incompatibilities.
 
 ## License
 
-Please see [LICENSE](/LICENSE) for how the code in this repo is licensed.
+Please see [LICENSE](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/LICENSE) for how the code in
+this repo is licensed.
 
 Copyright &copy; 2019 Gruntwork, Inc.

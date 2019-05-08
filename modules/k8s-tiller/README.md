@@ -1,5 +1,9 @@
 # K8S Tiller (Helm Server) Module
 
+<!-- NOTE: We use absolute linking here instead of relative linking, because the terraform registry does not support
+           relative linking correctly.
+-->
+
 This Terraform Module can be used to declaratively deploy and manage multiple Tiller (the server component of Helm)
 deployments in a single Kubernetes cluster.
 Unlike the defaults installed by the helm client, the deployed Tiller instances:
@@ -14,11 +18,15 @@ repository will be updated with migration instructions to help smooth out the up
 
 ## How do you use this module?
 
-* See the [root README](/README.md) for instructions on using Terraform modules.
+* See the [root README](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/README.md) for
+  instructions on using Terraform modules.
 * This module uses [the `kubernetes` provider](https://www.terraform.io/docs/providers/kubernetes/index.html).
-* See [the example at the root of the repo](/) for example usage.
-* See [variables.tf](./variables.tf) for all the variables you can set on this module.
-* See [outputs.tf](./outputs.tf) for all the variables that are outputed by this module.
+* See [the example at the root of the repo](https://github.com/gruntwork-io/terraform-kubernetes-helm) for example
+  usage.
+* See [variables.tf](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/modules/k8s-tiller/variables.tf)
+  for all the variables you can set on this module.
+* See [outputs.tf](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/modules/k8s-tiller/outputs.tf)
+  for all the variables that are outputed by this module.
 
 
 ## What is Tiller?
@@ -48,10 +56,11 @@ installs to only manage resources in particular namespaces, or even restrict wha
 
 The specific roles to use for Tiller depends on your infrastructure needs. At a minimum, Tiller needs enough permissions
 to manage its own metadata, and permissions to deploy resources in the target Namespace. We provide minimal permission
-sets that you can use in the [k8s-namespace-roles module](../k8s-namespace-roles). You can associate the
-`rbac_tiller_metadata_access_role` and `rbac_tiller_resource_access_role` roles created by the module to the Tiller
-`ServiceAccount` to grant those permissions. For example, the following terraform code will create these roles in the
-`kube-system` `Namespace` and attach it to a new `ServiceAccount` that you can then use in this module:
+sets that you can use in the [k8s-namespace-roles
+module](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/modules/k8s-namespace-roles). You can
+associate the `rbac_tiller_metadata_access_role` and `rbac_tiller_resource_access_role` roles created by the module to
+the Tiller `ServiceAccount` to grant those permissions. For example, the following terraform code will create these
+roles in the `kube-system` `Namespace` and attach it to a new `ServiceAccount` that you can then use in this module:
 
 ```hcl
 module "namespace_roles" {
@@ -118,5 +127,6 @@ To summarize, assuming a single client, in this model we have three sets of TLS 
 You can use `kubergrunt` to manage TLS certificates optimized for use with Tiller. `kubergrunt` provides various
 primitives that can be used for generating and managing TLS certificates using Kubernetes `Secrets`. This allows you to
 manage access to Helm using the RBAC system of Kubernetes. See the [k8s-tiller-minikube
-example](/examples/k8s-tiller-minikube) for an example of how to use `kubergrunt` to generate TLS certs for use with
+example](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/examples/k8s-tiller-minikube) for an
+example of how to use `kubergrunt` to generate TLS certs for use with
 this module.
