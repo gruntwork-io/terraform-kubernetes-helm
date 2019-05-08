@@ -161,7 +161,8 @@ key, public certificate, and CA public certificate files respectively.
 are sensitive to storing secrets in your Terraform state file, consider using `kubergrunt` to generate and manage your
 TLS certificate. See [Generating with kubergrunt](#generating-with-kubergrunt) for more details.**
 
-This method of configuring the TLS certs utilizes the [k8s-tiller-tls-certs module](../k8s-tiller-tls-certs) to generate
+This method of configuring the TLS certs utilizes the [k8s-tiller-tls-certs
+module](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/modules/k8s-tiller-tls-certs) to generate
 the TLS CA, and a signed certificate key pair for Tiller using that CA. To use this method, set `tiller_tls_gen_method`
 to `"provider"`.
 
@@ -220,5 +221,5 @@ In order to access Tiller, you will typically need to generate additional signed
 certs. If you used the direct method, you will have to rely on your certificate provider to sign additional client
 certificates. For ther other two methods, you can take a look at [How do you use the generated TLS certs to sign
 additional
-certificates](../k8s-tiller-tls-certs/README.md#how-do-you-use-the-generated-tls-certs-to-sign-additional-certificates)
+certificates](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/modules/k8s-tiller-tls-certs/README.md#how-do-you-use-the-generated-tls-certs-to-sign-additional-certificates)
 for information on how sign additional certificates using the generated TLS CA.

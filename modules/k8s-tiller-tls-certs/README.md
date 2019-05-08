@@ -1,5 +1,9 @@
 # K8S Tiller TLS Certs Module
 
+<!-- NOTE: We use absolute linking here instead of relative linking, because the terraform registry does not support
+           relative linking correctly.
+-->
+
 This Terraform Module can be used to generate a Certificate Authority (CA) public key, that is then used to generate a
 signed TLS certificate. These certs are then stored in a Kubernetes `Secret` so that they can be used with Tiller and
 `kubergrunt` to manage authentication to Tiller.
@@ -18,19 +22,24 @@ certificate. See [the k8s-tiller-kubergrunt-minikube example](/examples/k8s-till
 
 ## How do you use this module?
 
-* See the [root README](/README.md) for instructions on using Terraform modules.
+* See the [root README](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/README.md) for
+  instructions on using Terraform modules.
 * This module uses [the `kubernetes` provider](https://www.terraform.io/docs/providers/kubernetes/index.html).
-* See the [examples](/examples) folder for example usage.
-* See [variables.tf](./variables.tf) for all the variables you can set on this module.
-* See [outputs.tf](./outputs.tf) for all the variables that are outputed by this module.
+* See the [examples](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/examples) folder for example
+  usage.
+* See [variables.tf](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/modules/k8s-tiller-tls-certs/variables.tf)
+  for all the variables you can set on this module.
+* See [outputs.tf](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/modules/k8s-tiller-tls-certs/outputs.tf)
+  for all the variables that are outputed by this module.
 
 
 ## How do you use the generated TLS certs with Tiller?
 
 This module will generate TLS certificate key pairs and store them in a Kubernetes `Secret`, outputting the name of the
 `Secret`. You can then pass the `Secret` name (output variable `signed_tls_certificate_key_pair_secret_name`) to the
-[k8s-tiller module](../k8s-tiller) as the input variable `tiller_tls_secret_name`. Tiller will then be able to find the
-generated TLS certificate key pairs and mount them into the container so that the server can use it.
+[k8s-tiller module](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/modules/k8s-tiller) as the
+input variable `tiller_tls_secret_name`. Tiller will then be able to find the generated TLS certificate key pairs and
+mount them into the container so that the server can use it.
 
 
 ## How do you use the generated TLS certs with kubergrunt for client side TLS management?

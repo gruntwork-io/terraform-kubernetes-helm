@@ -65,16 +65,17 @@ This repo provides a Gruntwork IaC Package and has the following folder structur
       Provision a default set of RBAC roles to use in a `Namespace`.
     * [k8s-service-account](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/modules/k8s-service-account):
       Provision a Kubernetes `ServiceAccount`.
-    * [k8s-tiller-tls-certs](/modules/k8s-tiller-tls-certs): Generate a TLS Certificate Authority (CA) and using that,
-      generate signed TLS certificate key pairs that can be used for TLS verification of Tiller. The certs are managed
-      on the cluster using Kubernetes `Secrets`. **NOTE**: This module uses the `tls` provider, which means the
-      generated certificate key pairs are stored in plain text in the Terraform state file. If you are sensitive to
-      secrets in Terraform state, consider using `kubergrunt` for TLS management.
-    * [k8s-helm-client-tls-certs](/modules/k8s-helm-client-tls-certs): Generate a signed TLS certificate key pair from a
-      previously generated CA certificate key pair. This TLS key pair can be used to authenticate a helm client to
-      access a deployed Tiller instance. **NOTE**: This module uses the `tls` provider, which means the generated
-      certificate key pairs are stored in plain text in the Terraform state file. If you are sensitive to secrets in
-      Terraform state, consider using `kubergrunt` for TLS management.
+    * [k8s-tiller-tls-certs](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/modules/k8s-tiller-tls-certs):
+      Generate a TLS Certificate Authority (CA) and using that, generate signed TLS certificate key pairs that can be
+      used for TLS verification of Tiller. The certs are managed on the cluster using Kubernetes `Secrets`. **NOTE**:
+      This module uses the `tls` provider, which means the generated certificate key pairs are stored in plain text in
+      the Terraform state file. If you are sensitive to secrets in Terraform state, consider using `kubergrunt` for TLS
+      management.
+    * [k8s-helm-client-tls-certs](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/modules/k8s-helm-client-tls-certs):
+      Generate a signed TLS certificate key pair from a previously generated CA certificate key pair. This TLS key pair
+      can be used to authenticate a helm client to access a deployed Tiller instance. **NOTE**: This module uses the
+      `tls` provider, which means the generated certificate key pairs are stored in plain text in the Terraform state
+      file. If you are sensitive to secrets in Terraform state, consider using `kubergrunt` for TLS management.
 
 * [examples](https://github.com/gruntwork-io/terraform-kubernetes-helm/tree/master/examples): This folder contains
   examples of how to use the Submodules.

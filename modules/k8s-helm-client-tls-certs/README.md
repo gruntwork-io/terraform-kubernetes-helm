@@ -1,12 +1,16 @@
 # K8S Helm Client TLS Certs Module
 
+<!-- NOTE: We use absolute linking here instead of relative linking, because the terraform registry does not support
+           relative linking correctly.
+-->
+
 This Terraform Module can be used to generate a signed TLS certificate key pair that can be used to authenticate the
 `helm` client with Tiller. These certs are optionally then stored in a Kubernetes `Secret`, that can then be shared with
 the client. Note that the `Secret` is configured such that it is compatible with `kubergrunt helm configure` for setting
 up the `helm` client.
 
 This module assumes the CA certs are stored as Kubernetes `Secrets` on the cluster, either via `kubergrunt` or the
-[k8s-tiller-tls-certs module](../k8s-tiller-tls-certs).
+[k8s-tiller-tls-certs module](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/modules/k8s-tiller-tls-certs).
 
 If you are unfamiliar with how TLS works, checkout [this primer on
 TLS/SSL](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert#background).
@@ -22,11 +26,15 @@ certificate. See [the k8s-tiller-kubergrunt-minikube example](/examples/k8s-till
 
 ## How do you use this module?
 
-* See the [root README](/README.md) for instructions on using Terraform modules.
+* See the [root README](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/README.md) for
+  instructions on using Terraform modules.
 * This module uses [the `kubernetes` provider](https://www.terraform.io/docs/providers/kubernetes/index.html).
-* See the [examples](/examples) folder for example usage.
-* See [variables.tf](./variables.tf) for all the variables you can set on this module.
-* See [outputs.tf](./outputs.tf) for all the variables that are outputed by this module.
+* See the [examples](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/examples) folder for example
+  usage.
+* See [variables.tf](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/modules/k8s-helm-client-tls-certs/variables.tf)
+  for all the variables you can set on this module.
+* See [outputs.tf](https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/modules/k8s-helm-client-tls-certs/outputs.tf)
+  for all the variables that are outputed by this module.
 
 
 ## How do I configure Helm to use the generated TLS certs?
