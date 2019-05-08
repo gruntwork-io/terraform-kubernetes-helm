@@ -106,9 +106,9 @@ Gruntwork can help with:
 
 * Setup, customization, and support for this Module.
 * Modules and submodules for other types of infrastructure, such as VPCs, Docker clusters, databases, and continuous
-  integration.
+  integration across major clouds.
 * Modules and Submodules that meet compliance requirements, such as HIPAA.
-* Consulting & Training on AWS, Terraform, and DevOps.
+* Consulting & Training on AWS, GCP, Terraform, and DevOps.
 
 
 ## How do I contribute to this Module?
