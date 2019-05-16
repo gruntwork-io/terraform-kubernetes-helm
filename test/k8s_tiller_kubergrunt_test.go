@@ -25,6 +25,7 @@ func TestK8STillerKubergrunt(t *testing.T) {
 	// os.Setenv("SKIP_create_terratest_options", "true")
 	// os.Setenv("SKIP_terraform_apply", "true")
 	// os.Setenv("SKIP_validate", "true")
+	// os.Setenv("SKIP_validate_upgrade", "true")
 	// os.Setenv("SKIP_cleanup", "true")
 
 	// Create a directory path that won't conflict
