@@ -54,7 +54,7 @@ utilities on the system `PATH`. Here are the installation guide for each:
 1. [`helm` client](https://docs.helm.sh/using_helm/#installing-helm)
 1. [`kubergrunt`](https://github.com/gruntwork-io/kubergrunt#installation), minimum version: v0.3.6
 
-Make sure the binaries are discoverble in your `PATH` variable. See [this stackoverflow
+Make sure the binaries are discoverable in your `PATH` variable. See [this stackoverflow
 post](https://stackoverflow.com/questions/14637979/how-to-permanently-set-path-on-linux-unix) for instructions on
 setting up your `PATH` on Unix, and [this
 post](https://stackoverflow.com/questions/1618280/where-can-i-set-path-to-make-exe-on-windows) for instructions on
