@@ -118,6 +118,37 @@ jobs:
       - store_test_results:
           path: /tmp/logs
 
+  integration_tests_without_kubergrunt:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /home/circleci
+
+      # The weird way you have to set PATH in Circle 2.0
+      - run: echo 'export PATH=$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
+
+      - run:
+          <<: *install_gruntwork_utils
+
+      - run:
+          command: setup-minikube
+
+      # Execute main terratests
+      - run:
+          name: run integration tests
+          command: |
+            mkdir -p /tmp/logs
+            run-go-tests --path test --timeout 60m --packages "-run TestK8STillerNoKubergrunt$ ." | tee /tmp/logs/all.log
+          no_output_timeout: 3600s
+
+      - run:
+          command: terratest_log_parser --testlog /tmp/logs/all.log --outputdir /tmp/logs
+          when: always
+      - store_artifacts:
+          path: /tmp/logs
+      - store_test_results:
+          path: /tmp/logs
+
 workflows:
   version: 2
   test-and-deploy:
@@ -134,6 +165,13 @@ workflows:
           tags:
             only: /^v.*/
 
+    - integration_tests_without_kubergrunt:
+        requires:
+          - setup
+        filters:
+          tags:
+            only: /^v.*/
+
   nightly:
     triggers:
       - schedule:
@@ -144,5 +182,8 @@ workflows:
     jobs:
       - setup
       - integration_tests:
+          requires:
+            - setup
+      - integration_tests_without_kubergrunt:
           requires:
             - setup

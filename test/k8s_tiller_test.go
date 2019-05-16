@@ -1,10 +1,8 @@
 package test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/k8s"
@@ -16,21 +14,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestK8STiller(t *testing.T) {
+// This test makes sure the root example can run without errors on a machine without kubergrunt
+func TestK8STillerNoKubergrunt(t *testing.T) {
 	t.Parallel()
 
-	// Uncomment any of the following to skip that section during the test
+	if kubergruntInstalled(t) {
+		t.Skip("This test assumes kubergrunt is not installed.")
+	}
+
 	// os.Setenv("SKIP_create_test_copy_of_examples", "true")
 	// os.Setenv("SKIP_create_test_service_account", "true")
 	// os.Setenv("SKIP_create_terratest_options", "true")
 	// os.Setenv("SKIP_terraform_apply", "true")
-	// os.Setenv("SKIP_validate", "true")
 	// os.Setenv("SKIP_cleanup", "true")
 
 	// Create a directory path that won't conflict
 	workingDir := filepath.Join(".", "stages", t.Name())
 
 	test_structure.RunTestStage(t, "create_test_copy_of_examples", func() {
+		uniqueID := random.UniqueId()
 		k8sTillerTerraformModulePath := test_structure.CopyTerraformFolderToTemp(t, "..", ".")
 		logger.Logf(t, "path to test folder %s\n", k8sTillerTerraformModulePath)
 		helmHome := filepath.Join(k8sTillerTerraformModulePath, ".helm")
@@ -39,66 +41,95 @@ func TestK8STiller(t *testing.T) {
 
 		test_structure.SaveString(t, workingDir, "k8sTillerTerraformModulePath", k8sTillerTerraformModulePath)
 		test_structure.SaveString(t, workingDir, "helmHome", helmHome)
-	})
-
-	// Create a ServiceAccount in its own namespace that we can use to login as for testing purposes.
-	test_structure.RunTestStage(t, "create_test_service_account", func() {
-		uniqueID := random.UniqueId()
-		testServiceAccountName := fmt.Sprintf("%s-test-account", strings.ToLower(uniqueID))
-		testServiceAccountNamespace := fmt.Sprintf("%s-test-account-namespace", strings.ToLower(uniqueID))
-		tmpConfigPath := k8s.CopyHomeKubeConfigToTemp(t)
-		kubectlOptions := k8s.NewKubectlOptions("", tmpConfigPath)
-
-		k8s.CreateNamespace(t, kubectlOptions, testServiceAccountNamespace)
-		kubectlOptions.Namespace = testServiceAccountNamespace
-		k8s.CreateServiceAccount(t, kubectlOptions, testServiceAccountName)
-		token := k8s.GetServiceAccountAuthToken(t, kubectlOptions, testServiceAccountName)
-		err := k8s.AddConfigContextForServiceAccountE(t, kubectlOptions, testServiceAccountName, testServiceAccountName, token)
-		// We do the error check and namespace deletion manually here, because we can't defer it within the test stage.
-		if err != nil {
-			k8s.DeleteNamespace(t, kubectlOptions, testServiceAccountNamespace)
-			t.Fatal(err)
-		}
-
 		test_structure.SaveString(t, workingDir, "uniqueID", uniqueID)
-		test_structure.SaveString(t, workingDir, "tmpKubectlConfigPath", tmpConfigPath)
-		test_structure.SaveString(t, workingDir, "testServiceAccountName", testServiceAccountName)
-		test_structure.SaveString(t, workingDir, "testServiceAccountNamespace", testServiceAccountNamespace)
 	})
 
 	test_structure.RunTestStage(t, "create_terratest_options", func() {
 		uniqueID := test_structure.LoadString(t, workingDir, "uniqueID")
 		helmHome := test_structure.LoadString(t, workingDir, "helmHome")
-		testServiceAccountName := test_structure.LoadString(t, workingDir, "testServiceAccountName")
-		testServiceAccountNamespace := test_structure.LoadString(t, workingDir, "testServiceAccountNamespace")
 		k8sTillerTerraformModulePath := test_structure.LoadString(t, workingDir, "k8sTillerTerraformModulePath")
 
-		k8sTillerTerratestOptions := createExampleK8STillerTerraformOptions(t, k8sTillerTerraformModulePath, helmHome, uniqueID, testServiceAccountName, testServiceAccountNamespace)
+		k8sTillerTerratestOptions := createExampleK8STillerTerraformOptions(t, k8sTillerTerraformModulePath, helmHome, uniqueID)
 
 		test_structure.SaveTerraformOptions(t, workingDir, k8sTillerTerratestOptions)
 	})
 
 	defer test_structure.RunTestStage(t, "cleanup", func() {
-		k8sNamespaceTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
-		terraform.Destroy(t, k8sNamespaceTerratestOptions)
-
-		testServiceAccountNamespace := test_structure.LoadString(t, workingDir, "testServiceAccountNamespace")
-		kubectlOptions := k8s.NewKubectlOptions("", "")
-		k8s.DeleteNamespace(t, kubectlOptions, testServiceAccountNamespace)
+		k8sTillerTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
+		terraform.Destroy(t, k8sTillerTerratestOptions)
 	})
 
 	test_structure.RunTestStage(t, "terraform_apply", func() {
-		k8sNamespaceTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
-		terraform.InitAndApply(t, k8sNamespaceTerratestOptions)
+		k8sTillerTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
+		terraform.InitAndApply(t, k8sTillerTerratestOptions)
+	})
+}
+
+func TestK8STiller(t *testing.T) {
+	t.Parallel()
+
+	// Uncomment any of the following to skip that section during the test
+	// os.Setenv("SKIP_create_test_copy_of_examples", "true")
+	// os.Setenv("SKIP_create_test_service_account", "true")
+	// os.Setenv("SKIP_create_terratest_options", "true")
+	// os.Setenv("SKIP_terraform_apply", "true")
+	// os.Setenv("SKIP_setup_helm_client", "true")
+	// os.Setenv("SKIP_validate", "true")
+	// os.Setenv("SKIP_cleanup", "true")
+
+	// Create a directory path that won't conflict
+	workingDir := filepath.Join(".", "stages", t.Name())
+
+	test_structure.RunTestStage(t, "create_test_copy_of_examples", func() {
+		uniqueID := random.UniqueId()
+		k8sTillerTerraformModulePath := test_structure.CopyTerraformFolderToTemp(t, "..", ".")
+		logger.Logf(t, "path to test folder %s\n", k8sTillerTerraformModulePath)
+		helmHome := filepath.Join(k8sTillerTerraformModulePath, ".helm")
+		// make sure to create the helm home directory
+		require.NoError(t, os.Mkdir(helmHome, 0700))
+
+		test_structure.SaveString(t, workingDir, "k8sTillerTerraformModulePath", k8sTillerTerraformModulePath)
+		test_structure.SaveString(t, workingDir, "helmHome", helmHome)
+		test_structure.SaveString(t, workingDir, "uniqueID", uniqueID)
+	})
+
+	test_structure.RunTestStage(t, "create_terratest_options", func() {
+		uniqueID := test_structure.LoadString(t, workingDir, "uniqueID")
+		helmHome := test_structure.LoadString(t, workingDir, "helmHome")
+		k8sTillerTerraformModulePath := test_structure.LoadString(t, workingDir, "k8sTillerTerraformModulePath")
+
+		k8sTillerTerratestOptions := createExampleK8STillerTerraformOptions(t, k8sTillerTerraformModulePath, helmHome, uniqueID)
+
+		test_structure.SaveTerraformOptions(t, workingDir, k8sTillerTerratestOptions)
+	})
+
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		k8sTillerTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
+		terraform.Destroy(t, k8sTillerTerratestOptions)
+	})
+
+	test_structure.RunTestStage(t, "terraform_apply", func() {
+		k8sTillerTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
+		terraform.InitAndApply(t, k8sTillerTerratestOptions)
+	})
+
+	test_structure.RunTestStage(t, "setup_helm_client", func() {
+		helmHome := test_structure.LoadString(t, workingDir, "helmHome")
+		kubectlOptions := k8s.NewKubectlOptions("", "")
+		k8sTillerTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
+		tillerNamespace := terraform.OutputRequired(t, k8sTillerTerratestOptions, "tiller_namespace")
+		resourceNamespace := terraform.OutputRequired(t, k8sTillerTerratestOptions, "resource_namespace")
+		tillerVersion := k8sTillerTerratestOptions.Vars["tiller_version"].(string)
+
+		runKubergruntWait(t, kubectlOptions, tillerNamespace, tillerVersion)
+		runKubergruntConfigure(t, kubectlOptions, helmHome, tillerNamespace, resourceNamespace)
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
 		helmHome := test_structure.LoadString(t, workingDir, "helmHome")
-		k8sNamespaceTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
-		resourceNamespace := k8sNamespaceTerratestOptions.Vars["resource_namespace"].(string)
-		tmpConfigPath := test_structure.LoadString(t, workingDir, "tmpKubectlConfigPath")
-		testServiceAccountName := test_structure.LoadString(t, workingDir, "testServiceAccountName")
-		kubectlOptions := k8s.NewKubectlOptions(testServiceAccountName, tmpConfigPath)
+		k8sTillerTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
+		resourceNamespace := terraform.OutputRequired(t, k8sTillerTerratestOptions, "resource_namespace")
+		kubectlOptions := k8s.NewKubectlOptions("", "")
 		kubectlOptions.Namespace = resourceNamespace
 
 		runHelm(
@@ -110,46 +141,69 @@ func TestK8STiller(t *testing.T) {
 			"--wait",
 		)
 	})
-
-	test_structure.RunTestStage(t, "validate_upgrade", func() {
-		// Make sure the upgrade command mentioned in the docs actually works
-		helmHome := test_structure.LoadString(t, workingDir, "helmHome")
-		tmpConfigPath := test_structure.LoadString(t, workingDir, "tmpKubectlConfigPath")
-		kubectlOptions := k8s.NewKubectlOptions("", tmpConfigPath)
-
-		runHelm(
-			t,
-			kubectlOptions,
-			helmHome,
-			"init",
-			"--upgrade",
-			"--wait",
-		)
-	})
 }
 
-func runHelm(t *testing.T, options *k8s.KubectlOptions, helmHome string, args ...string) {
-	helmArgs := []string{"helm"}
+func runKubergruntConfigure(
+	t *testing.T,
+	options *k8s.KubectlOptions,
+	helmHome string,
+	tillerNamespace string,
+	resourceNamespace string,
+) {
+	kubergruntArgs := []string{
+		"helm",
+		"configure",
+		"--helm-home", helmHome,
+		"--tiller-namespace", tillerNamespace,
+		"--resource-namespace", resourceNamespace,
+		"--rbac-user", "minikube",
+	}
 	if options.ContextName != "" {
-		helmArgs = append(helmArgs, "--kube-context", options.ContextName)
+		kubergruntArgs = append(kubergruntArgs, "--kubectl-context-name", options.ContextName)
 	}
 	if options.ConfigPath != "" {
-		helmArgs = append(helmArgs, "--kubeconfig", options.ConfigPath)
+		kubergruntArgs = append(kubergruntArgs, "--kubeconfig", options.ConfigPath)
 	}
-	if options.Namespace != "" {
-		helmArgs = append(helmArgs, "--namespace", options.Namespace)
-	}
-	helmArgs = append(helmArgs, args...)
-	helmCmd := strings.Join(helmArgs, " ")
 
-	// TODO: make this test platform independent
-	helmEnvPath := filepath.Join(helmHome, "env")
 	cmd := shell.Command{
-		Command: "sh",
-		Args: []string{
-			"-c",
-			fmt.Sprintf(". %s && %s", helmEnvPath, helmCmd),
-		},
+		Command: "kubergrunt",
+		Args:    kubergruntArgs,
 	}
 	shell.RunCommand(t, cmd)
+}
+
+func runKubergruntWait(
+	t *testing.T,
+	options *k8s.KubectlOptions,
+	tillerNamespace string,
+	tillerVersion string,
+) {
+	kubergruntArgs := []string{
+		"helm",
+		"wait-for-tiller",
+		"--tiller-namespace", tillerNamespace,
+		"--expected-tiller-version", tillerVersion,
+	}
+	if options.ContextName != "" {
+		kubergruntArgs = append(kubergruntArgs, "--kubectl-context-name", options.ContextName)
+	}
+	if options.ConfigPath != "" {
+		kubergruntArgs = append(kubergruntArgs, "--kubeconfig", options.ConfigPath)
+	}
+
+	cmd := shell.Command{
+		Command: "kubergrunt",
+		Args:    kubergruntArgs,
+	}
+	shell.RunCommand(t, cmd)
+}
+
+func kubergruntInstalled(t *testing.T) bool {
+	cmd := shell.Command{
+		Command: "kubergrunt",
+		Args:    []string{"version"},
+	}
+	err := shell.RunCommandE(t, cmd)
+	return err == nil
+
 }

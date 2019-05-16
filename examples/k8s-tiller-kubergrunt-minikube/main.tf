@@ -23,7 +23,7 @@ module "tiller_namespace" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
   # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.3.0"
-  source = "./modules/k8s-namespace"
+  source = "../../modules/k8s-namespace"
 
   name = "${var.tiller_namespace}"
 }
@@ -32,7 +32,7 @@ module "resource_namespace" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
   # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.3.0"
-  source = "./modules/k8s-namespace"
+  source = "../../modules/k8s-namespace"
 
   name = "${var.resource_namespace}"
 }
@@ -41,7 +41,7 @@ module "tiller_service_account" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
   # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-service-account?ref=v0.3.0"
-  source = "./modules/k8s-service-account"
+  source = "../../modules/k8s-service-account"
 
   name           = "${var.service_account_name}"
   namespace      = "${module.tiller_namespace.name}"
@@ -71,52 +71,89 @@ module "tiller" {
   # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
   # to a specific version of the modules, such as the following example:
   # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-tiller?ref=v0.3.0"
-  source = "./modules/k8s-tiller"
+  source = "../../modules/k8s-tiller"
 
   tiller_service_account_name              = "${module.tiller_service_account.name}"
   tiller_service_account_token_secret_name = "${module.tiller_service_account.token_secret_name}"
   namespace                                = "${module.tiller_namespace.name}"
   tiller_image_version                     = "${var.tiller_version}"
 
-  tiller_tls_gen_method   = "provider"
+  tiller_tls_gen_method   = "kubergrunt"
   tiller_tls_subject      = "${var.tls_subject}"
   private_key_algorithm   = "${var.private_key_algorithm}"
   private_key_ecdsa_curve = "${var.private_key_ecdsa_curve}"
   private_key_rsa_bits    = "${var.private_key_rsa_bits}"
+
+  kubectl_config_context_name = "${var.kubectl_config_context_name}"
+  kubectl_config_path         = "${var.kubectl_config_path}"
 }
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# GENERATE CLIENT TLS CERTIFICATES FOR USE WITH HELM CLIENT
-# These certs will be stored in Kubernetes Secrets, in a format compatible with `kubergrunt helm configure`
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-module "helm_client_tls_certs" {
-  # When using these modules in your own templates, you will need to use a Git URL with a ref attribute that pins you
-  # to a specific version of the modules, such as the following example:
-  # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-helm-client-tls-certs?ref=v0.3.1"
-  source = "./modules/k8s-helm-client-tls-certs"
-
-  ca_tls_certificate_key_pair_secret_namespace = "${module.tiller.tiller_ca_tls_certificate_key_pair_secret_namespace}"
-  ca_tls_certificate_key_pair_secret_name      = "${module.tiller.tiller_ca_tls_certificate_key_pair_secret_name}"
-
-  tls_subject                               = "${var.client_tls_subject}"
-  tls_certificate_key_pair_secret_namespace = "${module.tiller_namespace.name}"
-
-  # Kubergrunt expects client cert secrets to be stored under this name format
-
-  tls_certificate_key_pair_secret_name = "tiller-client-${md5(local.rbac_entity_id)}-certs"
-  tls_certificate_key_pair_secret_labels = {
-    "gruntwork.io/tiller-namespace"        = "${module.tiller_namespace.name}"
-    "gruntwork.io/tiller-credentials"      = "true"
-    "gruntwork.io/tiller-credentials-type" = "client"
+# We use kubergrunt to wait for Tiller to be deployed. Any resources that depend on this can assume Tiller is
+# successfully deployed and up at that point.
+resource "null_resource" "wait_for_tiller" {
+  provisioner "local-exec" {
+    command = <<-EOF
+    ${lookup(module.require_executables.executables, "kubergrunt")} helm wait-for-tiller ${local.esc_newl}
+      --tiller-namespace ${module.tiller_namespace.name} ${local.esc_newl}
+      --tiller-deployment-name ${module.tiller.deployment_name} ${local.esc_newl}
+      --expected-tiller-version ${var.tiller_version}
+    EOF
   }
 }
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# CONFIGURE OPERATOR HELM CLIENT
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+resource "null_resource" "grant_helm_access" {
+  count      = "${var.configure_helm}"
+  depends_on = ["null_resource.wait_for_tiller"]
+
+  provisioner "local-exec" {
+    command = <<-EOF
+    ${lookup(module.require_executables.executables, "kubergrunt")} helm grant ${local.esc_newl}
+      --tiller-namespace ${module.tiller_namespace.name} ${local.esc_newl}
+      ${local.kubectl_config_options} ${local.esc_newl}
+      --tls-subject-json '${jsonencode(var.client_tls_subject)}' ${local.esc_newl}
+      ${local.configure_args}
+
+    ${lookup(module.require_executables.executables, "kubergrunt")} helm configure ${local.esc_newl}
+      --helm-home ${local.helm_home_with_default} ${local.esc_newl}
+      --tiller-namespace ${module.tiller_namespace.name} ${local.esc_newl}
+      --resource-namespace ${module.resource_namespace.name} ${local.esc_newl}
+      ${local.kubectl_config_options} ${local.esc_newl}
+      ${local.configure_args}
+    EOF
+  }
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# COMPUTATIONS
+# These locals compute various useful information used throughout this Terraform module.
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 locals {
-  rbac_entity_id = "${
-    var.grant_helm_client_rbac_user != "" ? var.grant_helm_client_rbac_user
-      : var.grant_helm_client_rbac_group != "" ? var.grant_helm_client_rbac_group
-        : var.grant_helm_client_rbac_service_account != "" ? var.grant_helm_client_rbac_service_account
+  kubectl_config_options = "${var.kubectl_config_context_name != "" ? "--kubectl-context-name ${var.kubectl_config_context_name}" : ""} ${var.kubectl_config_path != "" ? "--kubeconfig ${var.kubectl_config_path}" : ""}"
+
+  helm_home_with_default = "${var.helm_home == "" ? pathexpand("~/.helm") : var.helm_home}"
+
+  configure_args = "${
+    var.helm_client_rbac_user != "" ? "--rbac-user ${var.helm_client_rbac_user}"
+      : var.helm_client_rbac_group != "" ? "--rbac-group ${var.helm_client_rbac_group}"
+        : var.helm_client_rbac_service_account != "" ? "--rbac-service-account ${var.helm_client_rbac_service_account}"
           : ""
   }"
+
+  esc_newl = "${module.os.name == "Windows" ? "`" : "\\"}"
+}
+
+module "os" {
+  source = "git::https://github.com/gruntwork-io/package-terraform-utilities.git//modules/operating-system?ref=v0.0.8"
+}
+
+module "require_executables" {
+  source = "git::https://github.com/gruntwork-io/package-terraform-utilities.git//modules/require-executable?ref=v0.0.8"
+
+  required_executables = ["kubergrunt"]
+  error_message        = "The __EXECUTABLE_NAME__ binary is not available in your PATH. Install the binary by following the instructions at https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/examples/k8s-tiller-kubergrunt-minikube/README.md#installing-necessary-tools, or update your PATH variable to search where you installed __EXECUTABLE_NAME__."
 }
