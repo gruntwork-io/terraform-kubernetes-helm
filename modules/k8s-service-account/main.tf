@@ -9,7 +9,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 terraform {
-  required_version = "~> 0.9"
+  required_version = ">= 0.12"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ terraform {
 
 resource "null_resource" "dependency_getter" {
   triggers = {
-    instance = "${join(",", var.dependencies)}"
+    instance = join(",", var.dependencies)
   }
 }
 
@@ -32,17 +32,29 @@ resource "null_resource" "dependency_getter" {
 
 resource "kubernetes_service_account" "service_account" {
   metadata {
-    name        = "${var.name}"
-    namespace   = "${var.namespace}"
-    labels      = "${var.labels}"
-    annotations = "${var.annotations}"
+    name        = var.name
+    namespace   = var.namespace
+    labels      = var.labels
+    annotations = var.annotations
   }
 
-  image_pull_secret               = "${var.secrets_for_pulling_images}"
-  secret                          = "${var.secrets_for_pods}"
-  automount_service_account_token = "${var.automount_service_account_token}"
+  dynamic "image_pull_secret" {
+    for_each = var.secrets_for_pulling_images
+    content {
+      name = image_pull_secret.value
+    }
+  }
 
-  depends_on = ["null_resource.dependency_getter"]
+  dynamic "secret" {
+    for_each = var.secrets_for_pods
+    content {
+      name = secret.value
+    }
+  }
+
+  automount_service_account_token = var.automount_service_account_token
+
+  depends_on = [null_resource.dependency_getter]
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -50,27 +62,27 @@ resource "kubernetes_service_account" "service_account" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "kubernetes_role_binding" "service_account_role_binding" {
-  count = "${var.num_rbac_roles}"
+  count = var.num_rbac_roles
 
   metadata {
-    name        = "${var.name}-${lookup(var.rbac_roles[count.index], "name")}-role-binding"
-    namespace   = "${lookup(var.rbac_roles[count.index], "namespace")}"
-    labels      = "${var.labels}"
-    annotations = "${var.annotations}"
+    name        = "${var.name}-${var.rbac_roles[count.index]["name"]}-role-binding"
+    namespace   = var.rbac_roles[count.index]["namespace"]
+    labels      = var.labels
+    annotations = var.annotations
   }
 
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "Role"
-    name      = "${lookup(var.rbac_roles[count.index], "name")}"
+    name      = var.rbac_roles[count.index]["name"]
   }
 
   subject {
     api_group = ""
     kind      = "ServiceAccount"
-    name      = "${kubernetes_service_account.service_account.metadata.0.name}"
-    namespace = "${var.namespace}"
+    name      = kubernetes_service_account.service_account.metadata[0].name
+    namespace = var.namespace
   }
 
-  depends_on = ["null_resource.dependency_getter"]
+  depends_on = [null_resource.dependency_getter]
 }

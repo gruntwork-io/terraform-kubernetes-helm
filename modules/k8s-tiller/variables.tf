@@ -31,13 +31,13 @@ variable "deployment_name" {
 
 variable "deployment_labels" {
   description = "Any labels to attach to the Kubernetes Deployment resource."
-  type        = "map"
+  type        = map(string)
   default     = {}
 }
 
 variable "deployment_annotations" {
   description = "Any annotations to attach to the Kubernetes Deployment resource."
-  type        = "map"
+  type        = map(string)
   default     = {}
 }
 
@@ -53,13 +53,13 @@ variable "service_name" {
 
 variable "service_labels" {
   description = "Any labels to attach to the Kubernetes Service resource."
-  type        = "map"
+  type        = map(string)
   default     = {}
 }
 
 variable "service_annotations" {
   description = "Any annotations to attach to the Kubernetes Service resource."
-  type        = "map"
+  type        = map(string)
   default     = {}
 }
 
@@ -105,7 +105,7 @@ variable "tiller_tls_secret_name" {
 
 variable "tiller_tls_subject" {
   description = "The issuer information that contains the identifying information for the Tiller server. Used to generate the TLS certificate keypairs. Used when var.tiller_tls_gen_method is not none. See https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for a list of expected keys."
-  type        = "map"
+  type        = map(string)
 
   default = {
     common_name  = "tiller"
@@ -174,6 +174,6 @@ variable "kubectl_token" {
 
 variable "dependencies" {
   description = "Create a dependency between the resources in this module to the interpolated values in this list (and thus the source resources). In other words, the resources in this module will now depend on the resources backing the values in this list such that those resources need to be created before the resources in this module, and the resources in this module need to be destroyed before the resources in the list."
-  type        = "list"
+  type        = list(string)
   default     = []
 }

@@ -9,7 +9,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 terraform {
-  required_version = "~> 0.9"
+  required_version = ">= 0.12"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ terraform {
 
 resource "null_resource" "dependency_getter" {
   triggers = {
-    instance = "${join(",", var.dependencies)}"
+    instance = join(",", var.dependencies)
   }
 }
 
@@ -31,13 +31,13 @@ resource "null_resource" "dependency_getter" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "kubernetes_namespace" "namespace" {
-  count      = "${var.create_resources ? 1 : 0}"
-  depends_on = ["null_resource.dependency_getter"]
+  count      = var.create_resources ? 1 : 0
+  depends_on = [null_resource.dependency_getter]
 
   metadata {
-    name        = "${var.name}"
-    labels      = "${var.labels}"
-    annotations = "${var.annotations}"
+    name        = var.name
+    labels      = var.labels
+    annotations = var.annotations
   }
 }
 
@@ -49,10 +49,10 @@ resource "kubernetes_namespace" "namespace" {
 module "namespace_roles" {
   source = "../k8s-namespace-roles"
 
-  namespace   = "${kubernetes_namespace.namespace.id}"
-  labels      = "${var.labels}"
-  annotations = "${var.annotations}"
+  namespace   = kubernetes_namespace.namespace[0].id
+  labels      = var.labels
+  annotations = var.annotations
 
-  create_resources = "${var.create_resources}"
-  dependencies     = ["${var.dependencies}"]
+  create_resources = var.create_resources
+  dependencies     = var.dependencies
 }

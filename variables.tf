@@ -17,7 +17,7 @@ variable "service_account_name" {
 
 variable "tls_subject" {
   description = "The issuer information that contains the identifying information for the Tiller server. Used to generate the TLS certificate keypairs. See https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for a list of expected keys."
-  type        = "map"
+  type        = map(any)
 
   default = {
     common_name  = "tiller"
@@ -27,7 +27,7 @@ variable "tls_subject" {
 
 variable "client_tls_subject" {
   description = "The issuer information that contains the identifying information for the helm client of the operator. Used to generate the TLS certificate keypairs. See https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for a list of expected keys."
-  type        = "map"
+  type        = map(any)
 
   default = {
     common_name  = "admin"

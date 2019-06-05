@@ -6,13 +6,15 @@
 # TLS certificate information
 
 variable "ca_tls_subject" {
-  description = "The issuer information that contains the identifying information for the CA certificates. See https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for a list of expected keys."
-  type        = "map"
+  description = "The issuer information that contains the identifying information for the CA certificates. See https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for a list of expected keys. Note that street_address must be a newline separated string as opposed to a list of strings."
+  # We use an string type here instead of directly specifying the object, to allow certain keys to be optional.
+  type = map(string)
 }
 
 variable "signed_tls_subject" {
-  description = "The issuer information that contains the identifying information for the signed certificates. See https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for a list of expected keys."
-  type        = "map"
+  description = "The issuer information that contains the identifying information for the signed certificates. See https://www.terraform.io/docs/providers/tls/r/cert_request.html#common_name for a list of expected keys. Note that street_address must be a newline separated string as opposed to a list of strings."
+  # We use an string type here instead of directly specifying the object, to allow certain keys to be optional.
+  type = map(string)
 }
 
 # Kubernetes Secret information
@@ -57,7 +59,7 @@ variable "private_key_rsa_bits" {
 
 variable "ca_tls_certs_allowed_uses" {
   description = "List of keywords from RFC5280 describing a use that is permitted for the CA certificate. For more info and the list of keywords, see https://www.terraform.io/docs/providers/tls/r/self_signed_cert.html#allowed_uses."
-  type        = "list"
+  type        = list(string)
 
   default = [
     "cert_signing",
@@ -70,7 +72,7 @@ variable "ca_tls_certs_allowed_uses" {
 
 variable "signed_tls_certs_allowed_uses" {
   description = "List of keywords from RFC5280 describing a use that is permitted for the issued certificate. For more info and the list of keywords, see https://www.terraform.io/docs/providers/tls/r/self_signed_cert.html#allowed_uses."
-  type        = "list"
+  type        = list(string)
 
   default = [
     "key_encipherment",
@@ -81,13 +83,13 @@ variable "signed_tls_certs_allowed_uses" {
 
 variable "signed_tls_certs_dns_names" {
   description = "List of DNS names for which the certificate will be valid (e.g. tiller, foo.example.com)."
-  type        = "list"
+  type        = list(string)
   default     = []
 }
 
 variable "signed_tls_certs_ip_addresses" {
   description = "List of IP addresses for which the certificate will be valid (e.g. 127.0.0.1)."
-  type        = "list"
+  type        = list(string)
   default     = ["127.0.0.1"]
 }
 
@@ -107,13 +109,13 @@ variable "ca_tls_certificate_key_pair_secret_filename_base" {
 
 variable "ca_tls_certificate_key_pair_secret_labels" {
   description = "Labels to apply to the Secret resource that stores the CA certificate key pairs."
-  type        = "map"
+  type        = map(string)
   default     = {}
 }
 
 variable "ca_tls_certificate_key_pair_secret_annotations" {
   description = "Annotations to apply to the Secret resource that stores the CA certificate key pairs."
-  type        = "map"
+  type        = map(string)
   default     = {}
 }
 
@@ -124,13 +126,13 @@ variable "signed_tls_certificate_key_pair_secret_filename_base" {
 
 variable "signed_tls_certificate_key_pair_secret_labels" {
   description = "Labels to apply to the Secret resource that stores the signed TLS certificate key pairs."
-  type        = "map"
+  type        = map(string)
   default     = {}
 }
 
 variable "signed_tls_certificate_key_pair_secret_annotations" {
   description = "Annotations to apply to the Secret resource that stores the signed TLS certificate key pairs."
-  type        = "map"
+  type        = map(string)
   default     = {}
 }
 
@@ -153,6 +155,6 @@ variable "create_resources" {
 
 variable "dependencies" {
   description = "Create a dependency between the resources in this module to the interpolated values in this list (and thus the source resources). In other words, the resources in this module will now depend on the resources backing the values in this list such that those resources need to be created before the resources in this module, and the resources in this module need to be destroyed before the resources in the list."
-  type        = "list"
+  type        = list(string)
   default     = []
 }
