@@ -5,10 +5,12 @@
 
 variable "name" {
   description = "The name of the service account to be created."
+  type        = string
 }
 
 variable "namespace" {
   description = "The namespace where the service account is created."
+  type        = string
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -20,6 +22,7 @@ variable "namespace" {
 # See: https://github.com/hashicorp/terraform/issues/17421
 variable "num_rbac_roles" {
   description = "Number of RBAC roles to bind. This should match the number of items in the list passed to rbac_roles."
+  type        = number
   default     = 0
 }
 
@@ -49,6 +52,7 @@ variable "annotations" {
 
 variable "automount_service_account_token" {
   description = "Whether or not to automatically mount the service account token into the container. This defaults to true."
+  type        = bool
   default     = true
 }
 

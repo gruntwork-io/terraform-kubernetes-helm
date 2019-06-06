@@ -21,18 +21,22 @@ variable "signed_tls_subject" {
 
 variable "ca_tls_certificate_key_pair_secret_namespace" {
   description = "Namespace where the CA certificate key pairs should be stored."
+  type        = string
 }
 
 variable "ca_tls_certificate_key_pair_secret_name" {
   description = "Name to use for the Secret resource that stores the CA certificate key pairs."
+  type        = string
 }
 
 variable "signed_tls_certificate_key_pair_secret_namespace" {
   description = "Namespace where the signed TLS certificate key pairs should be stored."
+  type        = string
 }
 
 variable "signed_tls_certificate_key_pair_secret_name" {
   description = "Name to use for the Secret resource that stores the signed TLS certificate key pairs."
+  type        = string
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -44,17 +48,20 @@ variable "signed_tls_certificate_key_pair_secret_name" {
 
 variable "private_key_algorithm" {
   description = "The name of the algorithm to use for private keys. Must be one of: RSA or ECDSA."
+  type        = string
   default     = "ECDSA"
 }
 
 variable "private_key_ecdsa_curve" {
   description = "The name of the elliptic curve to use. Should only be used if var.private_key_algorithm is ECDSA. Must be one of P224, P256, P384 or P521."
+  type        = string
   default     = "P256"
 }
 
 variable "private_key_rsa_bits" {
   description = "The size of the generated RSA key in bits. Should only be used if var.private_key_algorithm is RSA."
-  default     = "2048"
+  type        = number
+  default     = 2048
 }
 
 variable "ca_tls_certs_allowed_uses" {
@@ -95,6 +102,7 @@ variable "signed_tls_certs_ip_addresses" {
 
 variable "validity_period_hours" {
   description = "The number of hours after initial issuing that the certificate will become invalid."
+  type        = number
 
   # 10 years
   default = 87660
@@ -104,6 +112,7 @@ variable "validity_period_hours" {
 
 variable "ca_tls_certificate_key_pair_secret_filename_base" {
   description = "Basename to use for the TLS certificate files stored in the Secret."
+  type        = string
   default     = "ca"
 }
 
@@ -121,6 +130,7 @@ variable "ca_tls_certificate_key_pair_secret_annotations" {
 
 variable "signed_tls_certificate_key_pair_secret_filename_base" {
   description = "Basename to use for the signed TLS certificate files stored in the Secret."
+  type        = string
   default     = "tls"
 }
 
@@ -138,6 +148,7 @@ variable "signed_tls_certificate_key_pair_secret_annotations" {
 
 variable "create_resources" {
   description = "Set to false to have this module create no resources. This weird parameter exists solely because Terraform does not support conditional modules. Therefore, this is a hack to allow you to conditionally decide if the TLS certs should be created or not."
+  type        = bool
   default     = true
 }
 
