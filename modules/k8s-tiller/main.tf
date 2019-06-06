@@ -345,7 +345,7 @@ resource "null_resource" "tiller_tls_certs" {
 }
 
 module "require_executables" {
-  source = "git::https://github.com/gruntwork-io/package-terraform-utilities.git//modules/require-executable?ref=tf12"
+  source = "git::https://github.com/gruntwork-io/package-terraform-utilities.git//modules/require-executable?ref=v0.1.0"
 
   # We have two items in the list here with conditionals, because terraform does not allow list values in conditionals.
   # TODO: revisit with TF 12
@@ -451,5 +451,5 @@ locals {
 
 # Identify the operating system platform we are executing on
 module "os" {
-  source = "git::https://github.com/gruntwork-io/package-terraform-utilities.git//modules/operating-system?ref=tf12"
+  source = "git::https://github.com/gruntwork-io/package-terraform-utilities.git//modules/operating-system?ref=v0.1.0"
 }

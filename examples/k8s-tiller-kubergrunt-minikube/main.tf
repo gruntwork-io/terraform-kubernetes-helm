@@ -147,11 +147,11 @@ locals {
 }
 
 module "os" {
-  source = "git::https://github.com/gruntwork-io/package-terraform-utilities.git//modules/operating-system?ref=tf12"
+  source = "git::https://github.com/gruntwork-io/package-terraform-utilities.git//modules/operating-system?ref=v0.1.0"
 }
 
 module "require_executables" {
-  source = "git::https://github.com/gruntwork-io/package-terraform-utilities.git//modules/require-executable?ref=tf12"
+  source = "git::https://github.com/gruntwork-io/package-terraform-utilities.git//modules/require-executable?ref=v0.1.0"
 
   required_executables = ["kubergrunt"]
   error_message        = "The __EXECUTABLE_NAME__ binary is not available in your PATH. Install the binary by following the instructions at https://github.com/gruntwork-io/terraform-kubernetes-helm/blob/master/examples/k8s-tiller-kubergrunt-minikube/README.md#installing-necessary-tools, or update your PATH variable to search where you installed __EXECUTABLE_NAME__."
