@@ -4,14 +4,18 @@
 # ServiceAccounts that are bound to each default role.
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+terraform {
+  required_version = ">= 0.12"
+}
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # CONFIGURE OUR KUBERNETES CONNECTIONS
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 provider "kubernetes" {
   version        = "~> 1.5"
-  config_context = "${var.kubectl_config_context_name}"
-  config_path    = "${var.kubectl_config_path}"
+  config_context = var.kubectl_config_context_name
+  config_path    = var.kubectl_config_path
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -24,7 +28,7 @@ module "namespace" {
   # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.0.1"
   source = "../../modules/k8s-namespace"
 
-  name = "${var.name}"
+  name = var.name
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,13 +42,15 @@ module "service_account_access_all" {
   source = "../../modules/k8s-service-account"
 
   name           = "${var.name}-admin"
-  namespace      = "${module.namespace.name}"
+  namespace      = module.namespace.name
   num_rbac_roles = 1
 
-  rbac_roles = [{
-    name      = "${module.namespace.rbac_access_all_role}"
-    namespace = "${module.namespace.name}"
-  }]
+  rbac_roles = [
+    {
+      name      = module.namespace.rbac_access_all_role
+      namespace = module.namespace.name
+    },
+  ]
 
   # How to tag the service account with a label
   labels = {
@@ -59,13 +65,15 @@ module "service_account_access_read_only" {
   source = "../../modules/k8s-service-account"
 
   name           = "${var.name}-read-only"
-  namespace      = "${module.namespace.name}"
+  namespace      = module.namespace.name
   num_rbac_roles = 1
 
-  rbac_roles = [{
-    name      = "${module.namespace.rbac_access_read_only_role}"
-    namespace = "${module.namespace.name}"
-  }]
+  rbac_roles = [
+    {
+      name      = module.namespace.rbac_access_read_only_role
+      namespace = module.namespace.name
+    },
+  ]
 
   # How to tag the service account with a label
   labels = {

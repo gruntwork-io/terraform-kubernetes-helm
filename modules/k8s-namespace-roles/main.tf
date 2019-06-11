@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 terraform {
-  required_version = "~> 0.9"
+  required_version = ">= 0.12"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ terraform {
 
 resource "null_resource" "dependency_getter" {
   triggers = {
-    instance = "${join(",", var.dependencies)}"
+    instance = join(",", var.dependencies)
   }
 }
 
@@ -37,14 +37,14 @@ resource "null_resource" "dependency_getter" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "kubernetes_role" "rbac_role_access_all" {
-  count      = "${var.create_resources ? 1 : 0}"
-  depends_on = ["null_resource.dependency_getter"]
+  count      = var.create_resources ? 1 : 0
+  depends_on = [null_resource.dependency_getter]
 
   metadata {
     name        = "${var.namespace}-access-all"
-    namespace   = "${var.namespace}"
-    labels      = "${var.labels}"
-    annotations = "${var.annotations}"
+    namespace   = var.namespace
+    labels      = var.labels
+    annotations = var.annotations
   }
 
   rule {
@@ -55,14 +55,14 @@ resource "kubernetes_role" "rbac_role_access_all" {
 }
 
 resource "kubernetes_role" "rbac_role_access_read_only" {
-  count      = "${var.create_resources ? 1 : 0}"
-  depends_on = ["null_resource.dependency_getter"]
+  count      = var.create_resources ? 1 : 0
+  depends_on = [null_resource.dependency_getter]
 
   metadata {
     name        = "${var.namespace}-access-read-only"
-    namespace   = "${var.namespace}"
-    labels      = "${var.labels}"
-    annotations = "${var.annotations}"
+    namespace   = var.namespace
+    labels      = var.labels
+    annotations = var.annotations
   }
 
   rule {
@@ -77,14 +77,14 @@ resource "kubernetes_role" "rbac_role_access_read_only" {
 # See https://docs.helm.sh/using_helm/#example-deploy-tiller-in-a-namespace-restricted-to-deploying-resources-in-another-namespace
 
 resource "kubernetes_role" "rbac_tiller_metadata_access" {
-  count      = "${var.create_resources ? 1 : 0}"
-  depends_on = ["null_resource.dependency_getter"]
+  count      = var.create_resources ? 1 : 0
+  depends_on = [null_resource.dependency_getter]
 
   metadata {
     name        = "${var.namespace}-tiller-metadata-access"
-    namespace   = "${var.namespace}"
-    labels      = "${var.labels}"
-    annotations = "${var.annotations}"
+    namespace   = var.namespace
+    labels      = var.labels
+    annotations = var.annotations
   }
 
   rule {
@@ -95,14 +95,14 @@ resource "kubernetes_role" "rbac_tiller_metadata_access" {
 }
 
 resource "kubernetes_role" "rbac_tiller_resource_access" {
-  count      = "${var.create_resources ? 1 : 0}"
-  depends_on = ["null_resource.dependency_getter"]
+  count      = var.create_resources ? 1 : 0
+  depends_on = [null_resource.dependency_getter]
 
   metadata {
     name        = "${var.namespace}-tiller-resource-access"
-    namespace   = "${var.namespace}"
-    labels      = "${var.labels}"
-    annotations = "${var.annotations}"
+    namespace   = var.namespace
+    labels      = var.labels
+    annotations = var.annotations
   }
 
   rule {
