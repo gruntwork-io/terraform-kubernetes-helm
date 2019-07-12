@@ -7,18 +7,13 @@ defaults: &defaults
     TERRATEST_LOG_PARSER_VERSION: v0.13.13
     KUBERGRUNT_VERSION: v0.3.8
     HELM_VERSION: v2.12.2
-    MODULE_CI_VERSION: v0.13.12
+    MODULE_CI_VERSION: v0.14.1
     TERRAFORM_VERSION: 0.12.1
     TERRAGRUNT_VERSION: NONE
     PACKER_VERSION: NONE
     GOLANG_VERSION: 1.11.2
     K8S_VERSION: v1.10.0  # Same as EKS
     KUBECONFIG: /home/circleci/.kube/config
-    MINIKUBE_VERSION: v0.28.2  # See https://github.com/kubernetes/minikube/issues/2704
-    MINIKUBE_WANTUPDATENOTIFICATION: "false"
-    MINIKUBE_WANTREPORTERRORPROMPT: "false"
-    MINIKUBE_HOME: /home/circleci
-    CHANGE_MINIKUBE_NONE_USER: "true"
 
 
 install_helm_client: &install_helm_client
