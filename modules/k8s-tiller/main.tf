@@ -429,6 +429,8 @@ locals {
   tiller_tls_ca_certs_secret_name = "${var.namespace}-namespace-tiller-ca-certs"
   tiller_tls_certs_secret_name    = "${var.namespace}-namespace-tiller-certs"
 
+  tiller_listen_localhost_arg = var.tiller_listen_localhost ? ["--listen=localhost:44134"]: []
+
   tls_algorithm_config = var.private_key_algorithm == "ECDSA" ? "--tls-private-key-ecdsa-curve ${var.private_key_ecdsa_curve}" : "--tls-private-key-rsa-bits ${var.private_key_rsa_bits}"
 
   kubergrunt_auth_params = <<-EOF
