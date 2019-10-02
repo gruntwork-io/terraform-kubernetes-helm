@@ -87,13 +87,12 @@ resource "kubernetes_deployment" "tiller" {
           image_pull_policy = var.tiller_image_pull_policy
           command           = ["/tiller"]
 
-          args = [
+          args = concat([
             "--storage=secret",
-            "--listen=localhost:44134",
             "--tls-key=${local.tls_certs_mount_path}/${var.tiller_tls_key_file_name}",
             "--tls-cert=${local.tls_certs_mount_path}/${var.tiller_tls_cert_file_name}",
             "--tls-ca-cert=${local.tls_certs_mount_path}/${var.tiller_tls_cacert_file_name}",
-          ]
+          ], local.tiller_listen_localhost_arg)
 
           env {
             name  = "TILLER_NAMESPACE"
