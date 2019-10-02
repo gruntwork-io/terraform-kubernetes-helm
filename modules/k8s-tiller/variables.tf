@@ -90,8 +90,8 @@ variable "tiller_image_pull_policy" {
 
 variable "tiller_listen_localhost" {
   description = "If Enabled, Tiller will only listen on localhost within the container."
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "tiller_history_max" {

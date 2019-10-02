@@ -263,8 +263,8 @@ resource "null_resource" "tiller_tls_ca_certs" {
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
     environment = {
       KUBECTL_SERVER_ENDPOINT = var.kubectl_server_endpoint
-      KUBECTL_CA_DATA = var.kubectl_ca_b64_data
-      KUBECTL_TOKEN = var.kubectl_token
+      KUBECTL_CA_DATA         = var.kubectl_ca_b64_data
+      KUBECTL_TOKEN           = var.kubectl_token
     }
   }
 
@@ -317,8 +317,8 @@ resource "null_resource" "tiller_tls_certs" {
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
     environment = {
       KUBECTL_SERVER_ENDPOINT = var.kubectl_server_endpoint
-      KUBECTL_CA_DATA = var.kubectl_ca_b64_data
-      KUBECTL_TOKEN = var.kubectl_token
+      KUBECTL_CA_DATA         = var.kubectl_ca_b64_data
+      KUBECTL_TOKEN           = var.kubectl_token
     }
   }
 
@@ -429,7 +429,7 @@ locals {
   tiller_tls_ca_certs_secret_name = "${var.namespace}-namespace-tiller-ca-certs"
   tiller_tls_certs_secret_name    = "${var.namespace}-namespace-tiller-certs"
 
-  tiller_listen_localhost_arg = var.tiller_listen_localhost ? ["--listen=localhost:44134"]: []
+  tiller_listen_localhost_arg = var.tiller_listen_localhost ? ["--listen=localhost:44134"] : []
 
   tls_algorithm_config = var.private_key_algorithm == "ECDSA" ? "--tls-private-key-ecdsa-curve ${var.private_key_ecdsa_curve}" : "--tls-private-key-rsa-bits ${var.private_key_rsa_bits}"
 
