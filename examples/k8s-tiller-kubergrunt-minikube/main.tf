@@ -110,7 +110,7 @@ resource "null_resource" "wait_for_tiller" {
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 resource "null_resource" "grant_helm_access" {
-  count = var.configure_helm ? 1 : 0
+  count      = var.configure_helm ? 1 : 0
   depends_on = [null_resource.wait_for_tiller]
 
   provisioner "local-exec" {
