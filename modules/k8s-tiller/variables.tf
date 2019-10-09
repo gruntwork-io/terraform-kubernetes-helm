@@ -88,6 +88,12 @@ variable "tiller_image_pull_policy" {
   default     = "IfNotPresent"
 }
 
+variable "tiller_listen_localhost" {
+  description = "If Enabled, Tiller will only listen on localhost within the container."
+  type        = bool
+  default     = true
+}
+
 variable "tiller_history_max" {
   description = "The maximum number of revisions saved per release. Use 0 for no limit."
   type        = number
