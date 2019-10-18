@@ -28,7 +28,8 @@ module "namespace" {
   # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-namespace?ref=v0.0.1"
   source = "../../modules/k8s-namespace"
 
-  name = var.name
+  create_resources = var.create_resources
+  name             = var.name
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -41,9 +42,10 @@ module "service_account_access_all" {
   # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-service-account?ref=v0.0.1"
   source = "../../modules/k8s-service-account"
 
-  name           = "${var.name}-admin"
-  namespace      = module.namespace.name
-  num_rbac_roles = 1
+  create_resources = var.create_resources
+  name             = "${var.name}-admin"
+  namespace        = module.namespace.name
+  num_rbac_roles   = 1
 
   rbac_roles = [
     {
@@ -64,9 +66,10 @@ module "service_account_access_read_only" {
   # source = "git::https://github.com/gruntwork-io/terraform-kubernetes-helm.git//modules/k8s-service-account?ref=v0.0.1"
   source = "../../modules/k8s-service-account"
 
-  name           = "${var.name}-read-only"
-  namespace      = module.namespace.name
-  num_rbac_roles = 1
+  create_resources = var.create_resources
+  name             = "${var.name}-read-only"
+  namespace        = module.namespace.name
+  num_rbac_roles   = 1
 
   rbac_roles = [
     {

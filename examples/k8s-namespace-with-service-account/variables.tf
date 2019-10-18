@@ -19,3 +19,14 @@ variable "kubectl_config_path" {
   type        = string
   default     = "~/.kube/config"
 }
+
+# ---------------------------------------------------------------------------------------------------------------------
+# TEST PARAMETERS
+# These variables are only used for testing purposes and should not be touched in normal operations.
+# ---------------------------------------------------------------------------------------------------------------------
+
+variable "create_resources" {
+  description = "Set to false to have this module create no resources."
+  type        = bool
+  default     = true
+}

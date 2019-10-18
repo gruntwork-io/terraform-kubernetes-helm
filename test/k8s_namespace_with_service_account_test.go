@@ -13,7 +13,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
+	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	authv1 "k8s.io/api/authorization/v1"
@@ -23,6 +23,53 @@ import (
 type TemplateArgs struct {
 	Namespace          string
 	ServiceAccountName string
+}
+
+func TestK8SNamespaceWithServiceAccountNoCreate(t *testing.T) {
+	t.Parallel()
+
+	// Uncomment any of the following to skip that section during the test
+	// os.Setenv("SKIP_foo", "true") // This stage doesn't exist, but is useful in ensuring the test directory isn't copied
+	// os.Setenv("SKIP_create_test_copy_of_examples", "true")
+	// os.Setenv("SKIP_create_terratest_options", "true")
+	// os.Setenv("SKIP_terraform_apply", "true")
+	// os.Setenv("SKIP_validate", "true")
+	// os.Setenv("SKIP_cleanup", "true")
+
+	// Create a directory path that won't conflict
+	workingDir := filepath.Join(".", "stages", t.Name())
+
+	test_structure.RunTestStage(t, "create_test_copy_of_examples", func() {
+		testFolder := test_structure.CopyTerraformFolderToTemp(t, "..", "examples")
+		logger.Logf(t, "path to test folder %s\n", testFolder)
+		k8sNamespaceTerraformModulePath := filepath.Join(testFolder, "k8s-namespace-with-service-account")
+		test_structure.SaveString(t, workingDir, "k8sNamespaceTerraformModulePath", k8sNamespaceTerraformModulePath)
+	})
+
+	test_structure.RunTestStage(t, "create_terratest_options", func() {
+		k8sNamespaceTerraformModulePath := test_structure.LoadString(t, workingDir, "k8sNamespaceTerraformModulePath")
+		uniqueID := random.UniqueId()
+		k8sNamespaceTerratestOptions := createExampleK8SNamespaceTerraformOptions(
+			t, uniqueID, k8sNamespaceTerraformModulePath)
+		k8sNamespaceTerratestOptions.Vars["create_resources"] = 0
+		test_structure.SaveString(t, workingDir, "uniqueID", uniqueID)
+		test_structure.SaveTerraformOptions(t, workingDir, k8sNamespaceTerratestOptions)
+	})
+
+	defer test_structure.RunTestStage(t, "cleanup", func() {
+		k8sNamespaceTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
+		terraform.Destroy(t, k8sNamespaceTerratestOptions)
+	})
+
+	test_structure.RunTestStage(t, "terraform_apply", func() {
+		k8sNamespaceTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
+		counts := terraform.GetResourceCount(t, terraform.InitAndPlan(t, k8sNamespaceTerratestOptions))
+		assert.Equal(t, 0, counts.Change)
+		assert.Equal(t, 0, counts.Destroy)
+		// IMPORTANT NOTE: we don't expect any resources to create, but because of how the dependencies system works, we
+		// expect to see 4 resources created: the 4 null_resources that act as a dependency getter.
+		assert.Equal(t, 4, counts.Add)
+	})
 }
 
 func TestK8SNamespaceWithServiceAccount(t *testing.T) {
@@ -88,7 +135,7 @@ func TestK8SNamespaceWithServiceAccount(t *testing.T) {
 // validateNamespace verifies that the namespace was created and is active.
 func validateNamespace(t *testing.T, k8sNamespaceTerratestOptions *terraform.Options) {
 	namespace := terraform.Output(t, k8sNamespaceTerratestOptions, "name")
-	kubectlOptions := k8s.NewKubectlOptions("", "")
+	kubectlOptions := k8s.NewKubectlOptions("", "", "default")
 	k8sNamespace := k8s.GetNamespace(t, kubectlOptions, namespace)
 	assert.Equal(t, k8sNamespace.Name, namespace)
 	assert.Equal(t, k8sNamespace.Status.Phase, corev1.NamespaceActive)
@@ -96,7 +143,7 @@ func validateNamespace(t *testing.T, k8sNamespaceTerratestOptions *terraform.Opt
 
 // validateRbacAccessAll verifies that the access all RBAC role has read and write privileges to the namespace
 func validateRbacAccessAll(t *testing.T, k8sNamespaceTerratestOptions *terraform.Options) {
-	kubectlOptions := k8s.NewKubectlOptions("", "")
+	kubectlOptions := k8s.NewKubectlOptions("", "", "default")
 	namespace := terraform.Output(t, k8sNamespaceTerratestOptions, "name")
 	serviceAccountName := terraform.Output(t, k8sNamespaceTerratestOptions, "service_account_access_all")
 	templateArgs := TemplateArgs{
@@ -128,7 +175,7 @@ func validateRbacAccessAll(t *testing.T, k8sNamespaceTerratestOptions *terraform
 
 // validateRbacAccessReadOnly verifies that the access read only RBAC role has read only privileges to the namespace
 func validateRbacAccessReadOnly(t *testing.T, k8sNamespaceTerratestOptions *terraform.Options) {
-	kubectlOptions := k8s.NewKubectlOptions("", "")
+	kubectlOptions := k8s.NewKubectlOptions("", "", "default")
 	namespace := terraform.Output(t, k8sNamespaceTerratestOptions, "name")
 	serviceAccountName := terraform.Output(t, k8sNamespaceTerratestOptions, "service_account_access_read_only")
 	templateArgs := TemplateArgs{
@@ -181,8 +228,7 @@ func checkAccessForServiceAccount(
 	// Wait for up to 5 minutes for pod to start (60 tries, 5 seconds inbetween each trial)
 	// We explicitly set the namespace to default here, because the Kubernetes API requires an explicit namespace when
 	// looking up pods by name.
-	namespacedKubectlOptions := k8s.NewKubectlOptions("", "")
-	namespacedKubectlOptions.Namespace = namespace
+	namespacedKubectlOptions := k8s.NewKubectlOptions("", "", namespace)
 	k8s.WaitUntilPodAvailable(t, namespacedKubectlOptions, curlPodName, 60, 5*time.Second)
 
 	// Run the check function while the curl pod is up
