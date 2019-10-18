@@ -115,7 +115,7 @@ func TestK8STiller(t *testing.T) {
 
 	test_structure.RunTestStage(t, "setup_helm_client", func() {
 		helmHome := test_structure.LoadString(t, workingDir, "helmHome")
-		kubectlOptions := k8s.NewKubectlOptions("", "", "default")
+		kubectlOptions := k8s.NewKubectlOptions("", "", "")
 		k8sTillerTerratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
 		tillerNamespace := terraform.OutputRequired(t, k8sTillerTerratestOptions, "tiller_namespace")
 		resourceNamespace := terraform.OutputRequired(t, k8sTillerTerratestOptions, "resource_namespace")

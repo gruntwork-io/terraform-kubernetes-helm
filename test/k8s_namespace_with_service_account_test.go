@@ -135,7 +135,7 @@ func TestK8SNamespaceWithServiceAccount(t *testing.T) {
 // validateNamespace verifies that the namespace was created and is active.
 func validateNamespace(t *testing.T, k8sNamespaceTerratestOptions *terraform.Options) {
 	namespace := terraform.Output(t, k8sNamespaceTerratestOptions, "name")
-	kubectlOptions := k8s.NewKubectlOptions("", "", "default")
+	kubectlOptions := k8s.NewKubectlOptions("", "", "")
 	k8sNamespace := k8s.GetNamespace(t, kubectlOptions, namespace)
 	assert.Equal(t, k8sNamespace.Name, namespace)
 	assert.Equal(t, k8sNamespace.Status.Phase, corev1.NamespaceActive)
@@ -143,7 +143,7 @@ func validateNamespace(t *testing.T, k8sNamespaceTerratestOptions *terraform.Opt
 
 // validateRbacAccessAll verifies that the access all RBAC role has read and write privileges to the namespace
 func validateRbacAccessAll(t *testing.T, k8sNamespaceTerratestOptions *terraform.Options) {
-	kubectlOptions := k8s.NewKubectlOptions("", "", "default")
+	kubectlOptions := k8s.NewKubectlOptions("", "", "")
 	namespace := terraform.Output(t, k8sNamespaceTerratestOptions, "name")
 	serviceAccountName := terraform.Output(t, k8sNamespaceTerratestOptions, "service_account_access_all")
 	templateArgs := TemplateArgs{
@@ -175,7 +175,7 @@ func validateRbacAccessAll(t *testing.T, k8sNamespaceTerratestOptions *terraform
 
 // validateRbacAccessReadOnly verifies that the access read only RBAC role has read only privileges to the namespace
 func validateRbacAccessReadOnly(t *testing.T, k8sNamespaceTerratestOptions *terraform.Options) {
-	kubectlOptions := k8s.NewKubectlOptions("", "", "default")
+	kubectlOptions := k8s.NewKubectlOptions("", "", "")
 	namespace := terraform.Output(t, k8sNamespaceTerratestOptions, "name")
 	serviceAccountName := terraform.Output(t, k8sNamespaceTerratestOptions, "service_account_access_read_only")
 	templateArgs := TemplateArgs{
