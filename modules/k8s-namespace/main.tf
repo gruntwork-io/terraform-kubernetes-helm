@@ -49,7 +49,7 @@ resource "kubernetes_namespace" "namespace" {
 module "namespace_roles" {
   source = "../k8s-namespace-roles"
 
-  namespace   = kubernetes_namespace.namespace[0].id
+  namespace   = var.create_resources ? kubernetes_namespace.namespace[0].id : ""
   labels      = var.labels
   annotations = var.annotations
 
