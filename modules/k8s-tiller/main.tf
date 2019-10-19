@@ -274,11 +274,9 @@ resource "null_resource" "tiller_tls_ca_certs" {
     interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
 
     command = <<-EOF
-      ${var.kubectl_server_endpoint != "" ? "echo \"${local.env_prefix}KUBECTL_CA_DATA\" > ${path.module}/kubernetes_server_ca.pem" : ""}
-      ${lookup(module.require_executables.executables, "kubectl", "")} ${local.esc_newl}
-        ${local.kubectl_auth_params} ${local.esc_newl}
-        --namespace ${var.tiller_tls_ca_cert_secret_namespace} ${local.esc_newl}
-        delete secret ${local.tiller_tls_ca_certs_secret_name}
+      ${lookup(module.require_executables.executables, "kubergrunt", "")} k8s kubectl ${local.esc_newl}
+        ${local.kubergrunt_auth_params} ${local.esc_newl}
+        -- delete secret ${local.tiller_tls_ca_certs_secret_name} -n ${var.tiller_tls_ca_cert_secret_namespace}
       EOF
 
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
@@ -330,11 +328,9 @@ resource "null_resource" "tiller_tls_certs" {
     interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
 
     command = <<-EOF
-      ${var.kubectl_server_endpoint != "" ? "echo \"${local.env_prefix}KUBECTL_CA_DATA\" > ${path.module}/kubernetes_server_ca.pem" : ""}
-      ${lookup(module.require_executables.executables, "kubectl", "")} ${local.esc_newl}
-        ${local.kubectl_auth_params} ${local.esc_newl}
-        --namespace ${var.namespace} ${local.esc_newl}
-        delete secret ${local.tiller_tls_certs_secret_name}
+      ${lookup(module.require_executables.executables, "kubergrunt", "")} k8s kubectl ${local.esc_newl}
+        ${local.kubergrunt_auth_params} ${local.esc_newl}
+        -- delete secret ${local.tiller_tls_certs_secret_name} -n ${var.namespace}
       EOF
 
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
@@ -473,15 +469,6 @@ locals {
     ${var.kubectl_config_path != "" ? "--kubeconfig ${local.kubectl_config_path}" : ""} ${local.esc_newl}
     ${var.kubectl_config_context_name != "" ? "--kubectl-context-name ${var.kubectl_config_context_name}" : ""} ${local.esc_newl}
     EOF
-
-  # Configure the CLI args to pass to kubectl to authenticate to the kubernetes cluster based on user input to the
-  # module
-  kubectl_auth_params = <<-EOF
-    ${var.kubectl_server_endpoint != "" ? "--server \"${local.env_prefix}KUBECTL_SERVER_ENDPOINT\" --certificate-authority \"${path.module}/kubernetes_server_ca.pem\" --token \"${local.env_prefix}KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
-    ${var.kubectl_config_path != "" ? "--kubeconfig ${local.kubectl_config_path}" : ""} ${local.esc_newl}
-    ${var.kubectl_config_context_name != "" ? "--context ${var.kubectl_config_context_name}" : ""} ${local.esc_newl}
-    EOF
-
 
   # The environment variable prefix and newline escape differs between bash and powershell, so we compute that here
   # based on the OS
