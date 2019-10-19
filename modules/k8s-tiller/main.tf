@@ -463,11 +463,14 @@ locals {
   # Derive the CLI args for the TLS algorithm config from the input variables
   tls_algorithm_config = var.private_key_algorithm == "ECDSA" ? "--tls-private-key-ecdsa-curve ${var.private_key_ecdsa_curve}" : "--tls-private-key-rsa-bits ${var.private_key_rsa_bits}"
 
+  # Make sure we expand the ~
+  kubectl_config_path = pathexpand(var.kubectl_config_path)
+
   # Configure the CLI args to pass to kubergrunt to authenticate to the kubernetes cluster based on user input to the
   # module
   kubergrunt_auth_params = <<-EOF
     ${var.kubectl_server_endpoint != "" ? "--kubectl-server-endpoint \"${local.env_prefix}KUBECTL_SERVER_ENDPOINT\" --kubectl-certificate-authority \"${local.env_prefix}KUBECTL_CA_DATA\" --kubectl-token \"{local.env_prefix}KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
-    ${var.kubectl_config_path != "" ? "--kubeconfig ${var.kubectl_config_path}" : ""} ${local.esc_newl}
+    ${var.kubectl_config_path != "" ? "--kubeconfig ${local.kubectl_config_path}" : ""} ${local.esc_newl}
     ${var.kubectl_config_context_name != "" ? "--kubectl-context-name ${var.kubectl_config_context_name}" : ""} ${local.esc_newl}
     EOF
 
@@ -475,7 +478,7 @@ locals {
   # module
   kubectl_auth_params = <<-EOF
     ${var.kubectl_server_endpoint != "" ? "--server \"${local.env_prefix}KUBECTL_SERVER_ENDPOINT\" --certificate-authority \"${path.module}/kubernetes_server_ca.pem\" --token \"${local.env_prefix}KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
-    ${var.kubectl_config_path != "" ? "--kubeconfig ${var.kubectl_config_path}" : ""} ${local.esc_newl}
+    ${var.kubectl_config_path != "" ? "--kubeconfig ${local.kubectl_config_path}" : ""} ${local.esc_newl}
     ${var.kubectl_config_context_name != "" ? "--context ${var.kubectl_config_context_name}" : ""} ${local.esc_newl}
     EOF
 
