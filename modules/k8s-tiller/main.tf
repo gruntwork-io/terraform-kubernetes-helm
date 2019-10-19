@@ -274,7 +274,7 @@ resource "null_resource" "tiller_tls_ca_certs" {
     interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
 
     command = <<-EOF
-      ${var.kubectl_server_endpoint != "" ? "echo \"$KUBECTL_CA_DATA\" > ${path.module}/kubernetes_server_ca.pem" : ""}
+      ${var.kubectl_server_endpoint != "" ? "echo \"${local.env_prefix}KUBECTL_CA_DATA\" > ${path.module}/kubernetes_server_ca.pem" : ""}
       ${lookup(module.require_executables.executables, "kubectl", "")} ${local.esc_newl}
         ${local.kubectl_auth_params} ${local.esc_newl}
         --namespace ${var.tiller_tls_ca_cert_secret_namespace} ${local.esc_newl}
@@ -330,7 +330,7 @@ resource "null_resource" "tiller_tls_certs" {
     interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
 
     command = <<-EOF
-      ${var.kubectl_server_endpoint != "" ? "echo \"$KUBECTL_CA_DATA\" > ${path.module}/kubernetes_server_ca.pem" : ""}
+      ${var.kubectl_server_endpoint != "" ? "echo \"${local.env_prefix}KUBECTL_CA_DATA\" > ${path.module}/kubernetes_server_ca.pem" : ""}
       ${lookup(module.require_executables.executables, "kubectl", "")} ${local.esc_newl}
         ${local.kubectl_auth_params} ${local.esc_newl}
         --namespace ${var.namespace} ${local.esc_newl}
@@ -437,20 +437,21 @@ locals {
   tls_algorithm_config = var.private_key_algorithm == "ECDSA" ? "--tls-private-key-ecdsa-curve ${var.private_key_ecdsa_curve}" : "--tls-private-key-rsa-bits ${var.private_key_rsa_bits}"
 
   kubergrunt_auth_params = <<-EOF
-    ${var.kubectl_server_endpoint != "" ? "--kubectl-server-endpoint \"$KUBECTL_SERVER_ENDPOINT\" --kubectl-certificate-authority \"$KUBECTL_CA_DATA\" --kubectl-token \"$KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
+    ${var.kubectl_server_endpoint != "" ? "--kubectl-server-endpoint \"${local.env_prefix}KUBECTL_SERVER_ENDPOINT\" --kubectl-certificate-authority \"${local.env_prefix}KUBECTL_CA_DATA\" --kubectl-token \"{local.env_prefix}KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
     ${var.kubectl_config_path != "" ? "--kubeconfig ${var.kubectl_config_path}" : ""} ${local.esc_newl}
     ${var.kubectl_config_context_name != "" ? "--kubectl-context-name ${var.kubectl_config_context_name}" : ""} ${local.esc_newl}
     EOF
 
 
   kubectl_auth_params = <<-EOF
-    ${var.kubectl_server_endpoint != "" ? "--server \"$KUBECTL_SERVER_ENDPOINT\" --certificate-authority \"${path.module}/kubernetes_server_ca.pem\" --token \"$KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
+    ${var.kubectl_server_endpoint != "" ? "--server \"${local.env_prefix}KUBECTL_SERVER_ENDPOINT\" --certificate-authority \"${path.module}/kubernetes_server_ca.pem\" --token \"${local.env_prefix}KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
     ${var.kubectl_config_path != "" ? "--kubeconfig ${var.kubectl_config_path}" : ""} ${local.esc_newl}
     ${var.kubectl_config_context_name != "" ? "--context ${var.kubectl_config_context_name}" : ""} ${local.esc_newl}
     EOF
 
 
   is_windows = module.os.name == "Windows"
+  env_prefix = local.is_windows ? "$env:" : "$"
   esc_newl   = local.is_windows ? "`" : "\\"
 }
 
