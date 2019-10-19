@@ -245,6 +245,8 @@ resource "null_resource" "tiller_tls_ca_certs" {
   depends_on = [null_resource.dependency_getter]
 
   provisioner "local-exec" {
+    interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
+
     command = <<-EOF
       ${lookup(module.require_executables.executables, "kubergrunt", "")} tls gen ${local.esc_newl}
         ${local.kubergrunt_auth_params} ${local.esc_newl}
@@ -259,7 +261,6 @@ resource "null_resource" "tiller_tls_ca_certs" {
         ${local.tls_algorithm_config}
       EOF
 
-
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
     environment = {
       KUBECTL_SERVER_ENDPOINT = var.kubectl_server_endpoint
@@ -269,7 +270,8 @@ resource "null_resource" "tiller_tls_ca_certs" {
   }
 
   provisioner "local-exec" {
-    when = destroy
+    when        = destroy
+    interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
 
     command = <<-EOF
       ${var.kubectl_server_endpoint != "" ? "echo \"$KUBECTL_CA_DATA\" > ${path.module}/kubernetes_server_ca.pem" : ""}
@@ -298,6 +300,8 @@ resource "null_resource" "tiller_tls_certs" {
   }
 
   provisioner "local-exec" {
+    interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
+
     command = <<-EOF
       ${lookup(module.require_executables.executables, "kubergrunt", "")} tls gen ${local.esc_newl}
         ${local.kubergrunt_auth_params} ${local.esc_newl}
@@ -313,7 +317,6 @@ resource "null_resource" "tiller_tls_certs" {
         ${local.tls_algorithm_config}
       EOF
 
-
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
     environment = {
       KUBECTL_SERVER_ENDPOINT = var.kubectl_server_endpoint
@@ -323,7 +326,8 @@ resource "null_resource" "tiller_tls_certs" {
   }
 
   provisioner "local-exec" {
-    when = destroy
+    when        = destroy
+    interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
 
     command = <<-EOF
       ${var.kubectl_server_endpoint != "" ? "echo \"$KUBECTL_CA_DATA\" > ${path.module}/kubernetes_server_ca.pem" : ""}
@@ -332,7 +336,6 @@ resource "null_resource" "tiller_tls_certs" {
         --namespace ${var.namespace} ${local.esc_newl}
         delete secret ${local.tiller_tls_certs_secret_name}
       EOF
-
 
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
     environment = {
@@ -447,7 +450,8 @@ locals {
     EOF
 
 
-  esc_newl = module.os.name == "Windows" ? "`" : "\\"
+  is_windows = module.os.name == "Windows"
+  esc_newl   = local.is_windows ? "`" : "\\"
 }
 
 # Identify the operating system platform we are executing on
