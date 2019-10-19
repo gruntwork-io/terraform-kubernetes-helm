@@ -256,7 +256,7 @@ resource "null_resource" "tiller_tls_ca_certs" {
         --secret-label gruntwork.io/tiller-namespace=${var.namespace} ${local.esc_newl}
         --secret-label gruntwork.io/tiller-credentials=true ${local.esc_newl}
         --secret-label gruntwork.io/tiller-credentials-type=ca ${local.esc_newl}
-        --tls-subject-json '${jsonencode(local.tiller_tls_ca_certs_subject)}' ${local.esc_newl}
+        --tls-subject-json '${local.tiller_tls_ca_certs_subject_json_as_arg}' ${local.esc_newl}
         --tls-private-key-algorithm ${var.private_key_algorithm} ${local.esc_newl}
         ${local.tls_algorithm_config}
       EOF
@@ -312,7 +312,7 @@ resource "null_resource" "tiller_tls_certs" {
         --secret-label gruntwork.io/tiller-namespace=${var.namespace} ${local.esc_newl}
         --secret-label gruntwork.io/tiller-credentials=true ${local.esc_newl}
         --secret-label gruntwork.io/tiller-credentials-type=server ${local.esc_newl}
-        --tls-subject-json '${jsonencode(var.tiller_tls_subject)}' ${local.esc_newl}
+        --tls-subject-json '${local.tiller_tls_subject_json_as_arg}' ${local.esc_newl}
         --tls-private-key-algorithm ${var.private_key_algorithm} ${local.esc_newl}
         ${local.tls_algorithm_config}
       EOF
@@ -422,27 +422,41 @@ locals {
 locals {
   generated_tls_secret_name = var.tiller_tls_gen_method == "none" ? var.tiller_tls_secret_name : local.tiller_tls_certs_secret_name
 
+  # The CA TLS subject is the same as the Tiller server, except we append CA to the common name to differentiate it from
+  # the server.
   tiller_tls_ca_certs_subject = merge(
     var.tiller_tls_subject,
     {
       "common_name" = "${var.tiller_tls_subject["common_name"]} CA"
     },
   )
+  tiller_tls_ca_certs_subject_json = jsonencode(local.tiller_tls_ca_certs_subjet)
+  tiller_tls_subject_json          = jsonencode(var.tiller_tls_subjet)
 
+  # In Powershell, double quotes must be escaped so before we pass the json to the command, we pass it through a replace
+  # call.
+  tiller_tls_ca_certs_subject_json_as_arg = local.is_windows ? replace(local.tiller_tls_ca_certs_subjet_json, "\"", "\\\"") : local.tiller_tls_ca_certs_subjet_json
+  tiller_tls_subject_json_as_arg          = local.is_windows ? replace(local.tiller_tls_subject_json, "\"", "\\\"") : local.tiller_tls_subject_json
+
+  # These Secret names are set based on what is expected by `kubergrunt helm grant`
   tiller_tls_ca_certs_secret_name = "${var.namespace}-namespace-tiller-ca-certs"
   tiller_tls_certs_secret_name    = "${var.namespace}-namespace-tiller-certs"
 
   tiller_listen_localhost_arg = var.tiller_listen_localhost ? ["--listen=localhost:44134"] : []
 
+  # Derive the CLI args for the TLS algorithm config from the input variables
   tls_algorithm_config = var.private_key_algorithm == "ECDSA" ? "--tls-private-key-ecdsa-curve ${var.private_key_ecdsa_curve}" : "--tls-private-key-rsa-bits ${var.private_key_rsa_bits}"
 
+  # Configure the CLI args to pass to kubergrunt to authenticate to the kubernetes cluster based on user input to the
+  # module
   kubergrunt_auth_params = <<-EOF
     ${var.kubectl_server_endpoint != "" ? "--kubectl-server-endpoint \"${local.env_prefix}KUBECTL_SERVER_ENDPOINT\" --kubectl-certificate-authority \"${local.env_prefix}KUBECTL_CA_DATA\" --kubectl-token \"{local.env_prefix}KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
     ${var.kubectl_config_path != "" ? "--kubeconfig ${var.kubectl_config_path}" : ""} ${local.esc_newl}
     ${var.kubectl_config_context_name != "" ? "--kubectl-context-name ${var.kubectl_config_context_name}" : ""} ${local.esc_newl}
     EOF
 
-
+  # Configure the CLI args to pass to kubectl to authenticate to the kubernetes cluster based on user input to the
+  # module
   kubectl_auth_params = <<-EOF
     ${var.kubectl_server_endpoint != "" ? "--server \"${local.env_prefix}KUBECTL_SERVER_ENDPOINT\" --certificate-authority \"${path.module}/kubernetes_server_ca.pem\" --token \"${local.env_prefix}KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
     ${var.kubectl_config_path != "" ? "--kubeconfig ${var.kubectl_config_path}" : ""} ${local.esc_newl}
@@ -450,6 +464,8 @@ locals {
     EOF
 
 
+  # The environment variable prefix and newline escape differs between bash and powershell, so we compute that here
+  # based on the OS
   is_windows = module.os.name == "Windows"
   env_prefix = local.is_windows ? "$env:" : "$"
   esc_newl   = local.is_windows ? "`" : "\\"
