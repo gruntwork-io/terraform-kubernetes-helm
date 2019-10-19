@@ -430,12 +430,12 @@ locals {
       "common_name" = "${var.tiller_tls_subject["common_name"]} CA"
     },
   )
-  tiller_tls_ca_certs_subject_json = jsonencode(local.tiller_tls_ca_certs_subjet)
-  tiller_tls_subject_json          = jsonencode(var.tiller_tls_subjet)
+  tiller_tls_ca_certs_subject_json = jsonencode(local.tiller_tls_ca_certs_subject)
+  tiller_tls_subject_json          = jsonencode(var.tiller_tls_subject)
 
   # In Powershell, double quotes must be escaped so before we pass the json to the command, we pass it through a replace
   # call.
-  tiller_tls_ca_certs_subject_json_as_arg = local.is_windows ? replace(local.tiller_tls_ca_certs_subjet_json, "\"", "\\\"") : local.tiller_tls_ca_certs_subjet_json
+  tiller_tls_ca_certs_subject_json_as_arg = local.is_windows ? replace(local.tiller_tls_ca_certs_subject_json, "\"", "\\\"") : local.tiller_tls_ca_certs_subject_json
   tiller_tls_subject_json_as_arg          = local.is_windows ? replace(local.tiller_tls_subject_json, "\"", "\\\"") : local.tiller_tls_subject_json
 
   # These Secret names are set based on what is expected by `kubergrunt helm grant`
