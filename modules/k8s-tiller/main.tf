@@ -469,7 +469,7 @@ locals {
   # Configure the CLI args to pass to kubergrunt to authenticate to the kubernetes cluster based on user input to the
   # module
   kubergrunt_auth_params = <<-EOF
-    ${var.kubectl_server_endpoint != "" ? "--kubectl-server-endpoint \"${local.env_prefix}KUBECTL_SERVER_ENDPOINT\" --kubectl-certificate-authority \"${local.env_prefix}KUBECTL_CA_DATA\" --kubectl-token \"{local.env_prefix}KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
+    ${var.kubectl_server_endpoint != "" ? "--kubectl-server-endpoint \"${local.env_prefix}KUBECTL_SERVER_ENDPOINT\" --kubectl-certificate-authority \"${local.env_prefix}KUBECTL_CA_DATA\" --kubectl-token \"${local.env_prefix}KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
     ${var.kubectl_config_path != "" ? "--kubeconfig ${local.kubectl_config_path}" : ""} ${local.esc_newl}
     ${var.kubectl_config_context_name != "" ? "--kubectl-context-name ${var.kubectl_config_context_name}" : ""} ${local.esc_newl}
     EOF

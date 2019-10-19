@@ -169,7 +169,7 @@ variable "kubectl_config_context_name" {
 variable "kubectl_config_path" {
   description = "The path to the config file to use for kubectl. If empty, defaults to $HOME/.kube/config. Used when var.tiller_tls_gen_method is kubergrunt."
   type        = string
-  default     = "~/.kube/config"
+  default     = ""
 }
 
 variable "kubectl_server_endpoint" {
