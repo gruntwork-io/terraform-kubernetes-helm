@@ -434,9 +434,25 @@ locals {
   tiller_tls_subject_json          = jsonencode(var.tiller_tls_subject)
 
   # In Powershell, double quotes must be escaped so before we pass the json to the command, we pass it through a replace
-  # call.
-  tiller_tls_ca_certs_subject_json_as_arg = local.is_windows ? replace(local.tiller_tls_ca_certs_subject_json, "\"", "\\\"") : local.tiller_tls_ca_certs_subject_json
-  tiller_tls_subject_json_as_arg          = local.is_windows ? replace(local.tiller_tls_subject_json, "\"", "\\\"") : local.tiller_tls_subject_json
+  # call. Additionally, due to the weird quoting rules, we need to make sure there is a space after each colon.
+  tiller_tls_ca_certs_subject_json_as_arg = (
+    local.is_windows
+    ? replace(
+      replace(local.tiller_tls_ca_certs_subject_json, "\"", "\\\""),
+      ":",
+      ": ",
+    )
+    : local.tiller_tls_ca_certs_subject_json
+  )
+  tiller_tls_subject_json_as_arg = (
+    local.is_windows
+    ? replace(
+      replace(local.tiller_tls_subject_json, "\"", "\\\""),
+      ":",
+      ": ",
+    )
+    : local.tiller_tls_subject_json
+  )
 
   # These Secret names are set based on what is expected by `kubergrunt helm grant`
   tiller_tls_ca_certs_secret_name = "${var.namespace}-namespace-tiller-ca-certs"
