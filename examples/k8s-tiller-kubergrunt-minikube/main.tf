@@ -143,7 +143,7 @@ locals {
 
   configure_args = var.helm_client_rbac_user != "" ? "--rbac-user ${var.helm_client_rbac_user}" : var.helm_client_rbac_group != "" ? "--rbac-group ${var.helm_client_rbac_group}" : var.helm_client_rbac_service_account != "" ? "--rbac-service-account ${var.helm_client_rbac_service_account}" : ""
 
-  esc_newl = module.os.name == "Windows" ? "`" : "\\"
+  esc_newl = module.os.name == "Windows" ? "^" : "\\"
 }
 
 module "os" {

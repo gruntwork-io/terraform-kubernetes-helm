@@ -447,7 +447,7 @@ locals {
     EOF
 
 
-  esc_newl = module.os.name == "Windows" ? "`" : "\\"
+  esc_newl = module.os.name == "Windows" ? "^" : "\\"
 }
 
 # Identify the operating system platform we are executing on
