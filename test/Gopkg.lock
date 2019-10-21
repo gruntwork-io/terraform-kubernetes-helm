@@ -214,7 +214,7 @@
   version = "v0.4.2"
 
 [[projects]]
-  digest = "1:793635a4fbf9b85ccbde91f2426a8b4319ab13902b95cfb8268d455846110e0b"
+  digest = "1:0d42a552cd449981e0c2723e2b23746178bc11c7e2a0537dbb712870515bcd6c"
   name = "github.com/gruntwork-io/terratest"
   packages = [
     "modules/aws",
@@ -233,8 +233,8 @@
     "modules/test-structure",
   ]
   pruneopts = "UT"
-  revision = "f3916f7a5f58e3fedf603388d3e3e8052d6a47a3"
-  version = "v0.16.1"
+  revision = "0034c83aea9e0852ad65115f76103b492428bc75"
+  version = "v0.20.1"
 
 [[projects]]
   digest = "1:8eb1de8112c9924d59bf1d3e5c26f5eaa2bfc2a5fcbb92dc1c2e4546d695f277"
@@ -243,14 +243,6 @@
   pruneopts = "UT"
   revision = "9f23e2d6bd2a77f959b2bf6acdbefd708a83a4a4"
   version = "v0.3.6"
-
-[[projects]]
-  digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
-  name = "github.com/inconshreveable/mousetrap"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
-  version = "v1.0"
 
 [[projects]]
   digest = "1:bb81097a5b62634f3e9fec1014657855610c82d19b9a40c17612e32651e35dca"
@@ -326,14 +318,6 @@
   pruneopts = "UT"
   revision = "be78767b3e392ce45ea73444451022a6fc32ad0d"
   version = "v1.1.0"
-
-[[projects]]
-  digest = "1:22799aea8fe96dd5693abdd1eaa14b1b29e3eafbdc7733fa155b3cb556c8a7ae"
-  name = "github.com/spf13/cobra"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "67fc4837d267bc9bfd6e47f77783fcc3dffc68de"
-  version = "v0.0.4"
 
 [[projects]]
   digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
@@ -488,8 +472,7 @@
   version = "v2.2.2"
 
 [[projects]]
-  branch = "master"
-  digest = "1:5d9a48e3144dfc06d3c5218b38164102f62300e83ffdd9a2d87b3c0b4135612f"
+  digest = "1:bf61730197acc225b5153ba3eb3d7b87c01da71f98896d9855309f37be7743ca"
   name = "k8s.io/api"
   packages = [
     "admissionregistration/v1alpha1",
@@ -525,7 +508,7 @@
     "storage/v1beta1",
   ]
   pruneopts = "UT"
-  revision = "173ce66c1e39d1d0f56e0b3347ff2988068aecd0"
+  revision = "a33c8200050fc0751848276811abf3fc029b3133"
 
 [[projects]]
   branch = "release-1.12"
@@ -641,14 +624,6 @@
   ]
   pruneopts = "UT"
   revision = "832c4d89038dd351f988d3d6164617e96af47d00"
-
-[[projects]]
-  digest = "1:7379e806daf6d6589f35f06200eecfe72abbb3c528e5a5900f92ed827c422e6b"
-  name = "k8s.io/kubernetes"
-  packages = ["pkg/kubectl/generate"]
-  pruneopts = "UT"
-  revision = "66049e3b21efe110454d67df4fa62b08ea79a19b"
-  version = "v1.14.2"
 
 [solve-meta]
   analyzer-name = "dep"

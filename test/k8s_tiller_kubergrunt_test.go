@@ -12,7 +12,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/test-structure"
+	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -48,7 +48,7 @@ func TestK8STillerKubergrunt(t *testing.T) {
 		testServiceAccountName := fmt.Sprintf("%s-test-account", strings.ToLower(uniqueID))
 		testServiceAccountNamespace := fmt.Sprintf("%s-test-account-namespace", strings.ToLower(uniqueID))
 		tmpConfigPath := k8s.CopyHomeKubeConfigToTemp(t)
-		kubectlOptions := k8s.NewKubectlOptions("", tmpConfigPath)
+		kubectlOptions := k8s.NewKubectlOptions("", tmpConfigPath, "")
 
 		k8s.CreateNamespace(t, kubectlOptions, testServiceAccountNamespace)
 		kubectlOptions.Namespace = testServiceAccountNamespace
@@ -84,7 +84,7 @@ func TestK8STillerKubergrunt(t *testing.T) {
 		terraform.Destroy(t, k8sTillerTerratestOptions)
 
 		testServiceAccountNamespace := test_structure.LoadString(t, workingDir, "testServiceAccountNamespace")
-		kubectlOptions := k8s.NewKubectlOptions("", "")
+		kubectlOptions := k8s.NewKubectlOptions("", "", "")
 		k8s.DeleteNamespace(t, kubectlOptions, testServiceAccountNamespace)
 	})
 
@@ -99,8 +99,7 @@ func TestK8STillerKubergrunt(t *testing.T) {
 		resourceNamespace := k8sTillerTerratestOptions.Vars["resource_namespace"].(string)
 		tmpConfigPath := test_structure.LoadString(t, workingDir, "tmpKubectlConfigPath")
 		testServiceAccountName := test_structure.LoadString(t, workingDir, "testServiceAccountName")
-		kubectlOptions := k8s.NewKubectlOptions(testServiceAccountName, tmpConfigPath)
-		kubectlOptions.Namespace = resourceNamespace
+		kubectlOptions := k8s.NewKubectlOptions(testServiceAccountName, tmpConfigPath, resourceNamespace)
 
 		runHelm(
 			t,
@@ -116,7 +115,7 @@ func TestK8STillerKubergrunt(t *testing.T) {
 		// Make sure the upgrade command mentioned in the docs actually works
 		helmHome := test_structure.LoadString(t, workingDir, "helmHome")
 		tmpConfigPath := test_structure.LoadString(t, workingDir, "tmpKubectlConfigPath")
-		kubectlOptions := k8s.NewKubectlOptions("", tmpConfigPath)
+		kubectlOptions := k8s.NewKubectlOptions("", tmpConfigPath, "")
 
 		runHelm(
 			t,

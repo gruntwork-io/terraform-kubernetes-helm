@@ -31,6 +31,8 @@ resource "null_resource" "dependency_getter" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "kubernetes_service_account" "service_account" {
+  count = var.create_resources ? 1 : 0
+
   metadata {
     name        = var.name
     namespace   = var.namespace
@@ -62,7 +64,7 @@ resource "kubernetes_service_account" "service_account" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "kubernetes_role_binding" "service_account_role_binding" {
-  count = var.num_rbac_roles
+  count = var.create_resources ? var.num_rbac_roles : 0
 
   metadata {
     name        = "${var.name}-${var.rbac_roles[count.index]["name"]}-role-binding"
@@ -80,7 +82,7 @@ resource "kubernetes_role_binding" "service_account_role_binding" {
   subject {
     api_group = ""
     kind      = "ServiceAccount"
-    name      = kubernetes_service_account.service_account.metadata[0].name
+    name      = kubernetes_service_account.service_account[0].metadata[0].name
     namespace = var.namespace
   }
 
