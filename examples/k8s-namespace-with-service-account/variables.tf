@@ -26,7 +26,7 @@ variable "kubectl_config_path" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 variable "create_resources" {
-  description = "Set to false to have this module create no resources."
+  description = "Set to false to have this module skip creating resources."
   type        = bool
   default     = true
 }
