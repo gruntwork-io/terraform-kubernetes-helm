@@ -282,7 +282,7 @@ resource "null_resource" "tiller_tls_ca_certs" {
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
     environment = {
       KUBECTL_SERVER_ENDPOINT = var.kubectl_server_endpoint
-      KUBECTL_CA_DATA         = base64decode(var.kubectl_ca_b64_data)
+      KUBECTL_CA_DATA         = var.kubectl_ca_b64_data
       KUBECTL_TOKEN           = var.kubectl_token
     }
   }
@@ -336,7 +336,7 @@ resource "null_resource" "tiller_tls_certs" {
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
     environment = {
       KUBECTL_SERVER_ENDPOINT = var.kubectl_server_endpoint
-      KUBECTL_CA_DATA         = base64decode(var.kubectl_ca_b64_data)
+      KUBECTL_CA_DATA         = var.kubectl_ca_b64_data
       KUBECTL_TOKEN           = var.kubectl_token
     }
   }
