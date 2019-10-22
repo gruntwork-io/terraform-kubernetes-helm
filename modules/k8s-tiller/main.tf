@@ -245,6 +245,8 @@ resource "null_resource" "tiller_tls_ca_certs" {
   depends_on = [null_resource.dependency_getter]
 
   provisioner "local-exec" {
+    interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
+
     command = <<-EOF
       ${lookup(module.require_executables.executables, "kubergrunt", "")} tls gen ${local.esc_newl}
         ${local.kubergrunt_auth_params} ${local.esc_newl}
@@ -254,11 +256,10 @@ resource "null_resource" "tiller_tls_ca_certs" {
         --secret-label gruntwork.io/tiller-namespace=${var.namespace} ${local.esc_newl}
         --secret-label gruntwork.io/tiller-credentials=true ${local.esc_newl}
         --secret-label gruntwork.io/tiller-credentials-type=ca ${local.esc_newl}
-        --tls-subject-json '${jsonencode(local.tiller_tls_ca_certs_subject)}' ${local.esc_newl}
+        --tls-subject-json '${local.tiller_tls_ca_certs_subject_json_as_arg}' ${local.esc_newl}
         --tls-private-key-algorithm ${var.private_key_algorithm} ${local.esc_newl}
         ${local.tls_algorithm_config}
       EOF
-
 
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
     environment = {
@@ -269,14 +270,13 @@ resource "null_resource" "tiller_tls_ca_certs" {
   }
 
   provisioner "local-exec" {
-    when = destroy
+    when        = destroy
+    interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
 
     command = <<-EOF
-      ${var.kubectl_server_endpoint != "" ? "echo \"$KUBECTL_CA_DATA\" > ${path.module}/kubernetes_server_ca.pem" : ""}
-      ${lookup(module.require_executables.executables, "kubectl", "")} ${local.esc_newl}
-        ${local.kubectl_auth_params} ${local.esc_newl}
-        --namespace ${var.tiller_tls_ca_cert_secret_namespace} ${local.esc_newl}
-        delete secret ${local.tiller_tls_ca_certs_secret_name}
+      ${lookup(module.require_executables.executables, "kubergrunt", "")} k8s kubectl ${local.esc_newl}
+        ${local.kubergrunt_auth_params} ${local.esc_newl}
+        -- delete secret ${local.tiller_tls_ca_certs_secret_name} -n ${var.tiller_tls_ca_cert_secret_namespace}
       EOF
 
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
@@ -298,6 +298,8 @@ resource "null_resource" "tiller_tls_certs" {
   }
 
   provisioner "local-exec" {
+    interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
+
     command = <<-EOF
       ${lookup(module.require_executables.executables, "kubergrunt", "")} tls gen ${local.esc_newl}
         ${local.kubergrunt_auth_params} ${local.esc_newl}
@@ -308,11 +310,10 @@ resource "null_resource" "tiller_tls_certs" {
         --secret-label gruntwork.io/tiller-namespace=${var.namespace} ${local.esc_newl}
         --secret-label gruntwork.io/tiller-credentials=true ${local.esc_newl}
         --secret-label gruntwork.io/tiller-credentials-type=server ${local.esc_newl}
-        --tls-subject-json '${jsonencode(var.tiller_tls_subject)}' ${local.esc_newl}
+        --tls-subject-json '${local.tiller_tls_subject_json_as_arg}' ${local.esc_newl}
         --tls-private-key-algorithm ${var.private_key_algorithm} ${local.esc_newl}
         ${local.tls_algorithm_config}
       EOF
-
 
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
     environment = {
@@ -323,16 +324,14 @@ resource "null_resource" "tiller_tls_certs" {
   }
 
   provisioner "local-exec" {
-    when = destroy
+    when        = destroy
+    interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
 
     command = <<-EOF
-      ${var.kubectl_server_endpoint != "" ? "echo \"$KUBECTL_CA_DATA\" > ${path.module}/kubernetes_server_ca.pem" : ""}
-      ${lookup(module.require_executables.executables, "kubectl", "")} ${local.esc_newl}
-        ${local.kubectl_auth_params} ${local.esc_newl}
-        --namespace ${var.namespace} ${local.esc_newl}
-        delete secret ${local.tiller_tls_certs_secret_name}
+      ${lookup(module.require_executables.executables, "kubergrunt", "")} k8s kubectl ${local.esc_newl}
+        ${local.kubergrunt_auth_params} ${local.esc_newl}
+        -- delete secret ${local.tiller_tls_certs_secret_name} -n ${var.namespace}
       EOF
-
 
     # Use environment variables for Kubernetes credentials to avoid leaking into the logs
     environment = {
@@ -419,35 +418,63 @@ locals {
 locals {
   generated_tls_secret_name = var.tiller_tls_gen_method == "none" ? var.tiller_tls_secret_name : local.tiller_tls_certs_secret_name
 
+  # The CA TLS subject is the same as the Tiller server, except we append CA to the common name to differentiate it from
+  # the server.
   tiller_tls_ca_certs_subject = merge(
     var.tiller_tls_subject,
     {
       "common_name" = "${var.tiller_tls_subject["common_name"]} CA"
     },
   )
+  tiller_tls_ca_certs_subject_json = jsonencode(local.tiller_tls_ca_certs_subject)
+  tiller_tls_subject_json          = jsonencode(var.tiller_tls_subject)
 
+  # In Powershell, double quotes must be escaped so before we pass the json to the command, we pass it through a replace
+  # call. Additionally, due to the weird quoting rules, we need to make sure there is a space after each colon.
+  tiller_tls_ca_certs_subject_json_as_arg = (
+    local.is_windows
+    ? replace(
+      replace(local.tiller_tls_ca_certs_subject_json, "\"", "\\\""),
+      ":",
+      ": ",
+    )
+    : local.tiller_tls_ca_certs_subject_json
+  )
+  tiller_tls_subject_json_as_arg = (
+    local.is_windows
+    ? replace(
+      replace(local.tiller_tls_subject_json, "\"", "\\\""),
+      ":",
+      ": ",
+    )
+    : local.tiller_tls_subject_json
+  )
+
+  # These Secret names are set based on what is expected by `kubergrunt helm grant`
   tiller_tls_ca_certs_secret_name = "${var.namespace}-namespace-tiller-ca-certs"
   tiller_tls_certs_secret_name    = "${var.namespace}-namespace-tiller-certs"
 
   tiller_listen_localhost_arg = var.tiller_listen_localhost ? ["--listen=localhost:44134"] : []
 
+  # Derive the CLI args for the TLS algorithm config from the input variables
   tls_algorithm_config = var.private_key_algorithm == "ECDSA" ? "--tls-private-key-ecdsa-curve ${var.private_key_ecdsa_curve}" : "--tls-private-key-rsa-bits ${var.private_key_rsa_bits}"
 
+  # Make sure we expand the ~
+  kubectl_config_path = pathexpand(var.kubectl_config_path)
+
+  # Configure the CLI args to pass to kubergrunt to authenticate to the kubernetes cluster based on user input to the
+  # module
   kubergrunt_auth_params = <<-EOF
-    ${var.kubectl_server_endpoint != "" ? "--kubectl-server-endpoint \"$KUBECTL_SERVER_ENDPOINT\" --kubectl-certificate-authority \"$KUBECTL_CA_DATA\" --kubectl-token \"$KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
-    ${var.kubectl_config_path != "" ? "--kubeconfig ${var.kubectl_config_path}" : ""} ${local.esc_newl}
+    ${var.kubectl_server_endpoint != "" ? "--kubectl-server-endpoint \"${local.env_prefix}KUBECTL_SERVER_ENDPOINT\" --kubectl-certificate-authority \"${local.env_prefix}KUBECTL_CA_DATA\" --kubectl-token \"${local.env_prefix}KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
+    ${var.kubectl_config_path != "" ? "--kubeconfig ${local.kubectl_config_path}" : ""} ${local.esc_newl}
     ${var.kubectl_config_context_name != "" ? "--kubectl-context-name ${var.kubectl_config_context_name}" : ""} ${local.esc_newl}
     EOF
 
-
-  kubectl_auth_params = <<-EOF
-    ${var.kubectl_server_endpoint != "" ? "--server \"$KUBECTL_SERVER_ENDPOINT\" --certificate-authority \"${path.module}/kubernetes_server_ca.pem\" --token \"$KUBECTL_TOKEN\"" : ""} ${local.esc_newl}
-    ${var.kubectl_config_path != "" ? "--kubeconfig ${var.kubectl_config_path}" : ""} ${local.esc_newl}
-    ${var.kubectl_config_context_name != "" ? "--context ${var.kubectl_config_context_name}" : ""} ${local.esc_newl}
-    EOF
-
-
-  esc_newl = module.os.name == "Windows" ? "`" : "\\"
+  # The environment variable prefix and newline escape differs between bash and powershell, so we compute that here
+  # based on the OS
+  is_windows = module.os.name == "Windows"
+  env_prefix = local.is_windows ? "$env:" : "$"
+  esc_newl   = local.is_windows ? "`" : "\\"
 }
 
 # Identify the operating system platform we are executing on

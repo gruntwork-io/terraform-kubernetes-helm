@@ -96,6 +96,8 @@ module "tiller" {
 # successfully deployed and up at that point.
 resource "null_resource" "wait_for_tiller" {
   provisioner "local-exec" {
+    interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
+
     command = <<-EOF
       ${module.require_executables.executables["kubergrunt"]} helm wait-for-tiller ${local.esc_newl}
         --tiller-namespace ${module.tiller_namespace.name} ${local.esc_newl}
@@ -114,6 +116,8 @@ resource "null_resource" "grant_helm_access" {
   depends_on = [null_resource.wait_for_tiller]
 
   provisioner "local-exec" {
+    interpreter = local.is_windows ? ["PowerShell", "-Command"] : ["bash", "-c"]
+
     command = <<-EOF
       ${module.require_executables.executables["kubergrunt"]} helm grant ${local.esc_newl}
         --tiller-namespace ${module.tiller_namespace.name} ${local.esc_newl}
@@ -143,7 +147,8 @@ locals {
 
   configure_args = var.helm_client_rbac_user != "" ? "--rbac-user ${var.helm_client_rbac_user}" : var.helm_client_rbac_group != "" ? "--rbac-group ${var.helm_client_rbac_group}" : var.helm_client_rbac_service_account != "" ? "--rbac-service-account ${var.helm_client_rbac_service_account}" : ""
 
-  esc_newl = module.os.name == "Windows" ? "`" : "\\"
+  is_windows = module.os.name == "Windows"
+  esc_newl   = local.is_windows ? "`" : "\\"
 }
 
 module "os" {
