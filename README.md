@@ -8,6 +8,8 @@
            relative linking correctly.
 -->
 
+**NOTE: This is for deploying Tiller, a major component of Helm v2. Tiller has been removed in Helm v3 and is no longer necesssary. You do NOT need this module to use Helm v3.**
+
 This repo contains a Module for deploying Tiller (the server component of Helm) on Kubernetes clusters with
 [Terraform](https://www.terraform.io).  This repo is a part of [the Gruntwork Infrastructure as Code
 Library](https://gruntwork.io/infrastructure-as-code-library/), a collection of reusable, battle-tested, production
