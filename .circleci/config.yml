@@ -45,7 +45,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dep-{{ checksum "test/Gopkg.lock" }}
+          - dep-{{ checksum "test/Gopkg.lock" }}
       # Install gruntwork utilities
       - run:
           <<: *install_gruntwork_utils
