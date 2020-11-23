@@ -154,15 +154,9 @@ workflows:
               only: master
     jobs:
       - setup:
-          context:
-            - Gruntwork Admin
       - integration_tests:
           requires:
             - setup
-          context:
-            - Gruntwork Admin
       - integration_tests_without_kubergrunt:
           requires:
             - setup
-          context:
-            - Gruntwork Admin
