@@ -166,19 +166,3 @@ workflows:
         filters:
           tags:
             only: /^v.*/
-
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 5 * * *"
-          filters:
-            branches:
-              only: master
-    jobs:
-      - setup
-      - integration_tests:
-          requires:
-            - setup
-      - integration_tests_without_kubergrunt:
-          requires:
-            - setup
