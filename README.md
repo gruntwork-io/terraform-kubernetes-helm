@@ -8,6 +8,8 @@
            relative linking correctly.
 -->
 
+**DEPRECATION NOTICE: This repo has been deprecated. The Namespace modules have been moved to [terraform-kubernetes-namespace](https://github.com/gruntwork-io/terraform-kubernetes-namespace). Refer to the [v0.1.0](https://github.com/gruntwork-io/terraform-kubernetes-namespace/releases/v0.1.0) release notes for migration instructions. Please use that module for continued functionality of managing Service Accounts and Namespaces.**
+
 **NOTE: This is for deploying Tiller, a major component of Helm v2. Tiller has been removed in Helm v3 and is no longer necesssary. You do NOT need this module to use Helm v3.**
 
 This repo contains a Module for deploying Tiller (the server component of Helm) on Kubernetes clusters with
